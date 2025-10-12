@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Review Analytics Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px;
+            padding: 30px;
+        }
+        .metric-card { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-card h2 { 
+            font-size: 2.5rem; 
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .chart-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .chart-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
+        }
+        .insight-badge {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            margin: 3px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .pain-point { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .advantage { background: linear-gradient(135deg, #51cf66, #40c057); }
+        .recommendation-card {
+            border-left: 4px solid #667eea;
+            background: linear-gradient(135deg, #f8f9ff, #ffffff);
+        }
+        .source-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .source-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .header-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        .live-indicator {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="header-title mb-3">
+                    <i class="fas fa-chart-line me-3"></i>
+                    App Review Analytics Dashboard
+                </h1>
+                <p class="text-muted fs-5">
+                    <i class="fas fa-sync-alt live-indicator me-2"></i>
+                    Real-time insights from app stores, support tickets, and surveys
+                </p>
+                <hr class="my-4">
+            </div>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="row mb-5">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-comments fa-2x mb-3"></i>
+                        <h4 class="card-title">Total Reviews</h4>
+                        <h2 id="total-reviews">1,247</h2>
+                        <small class="opacity-75">+12% this week</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-star fa-2x mb-3"></i>
+                        <h4 class="card-title">Avg Rating</h4>
+                        <h2 id="avg-rating">4.2</h2>
+                        <small class="opacity-75">+0.3 this month</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-smile fa-2x mb-3"></i>
+                        <h4 class="card-title">Positive Sentiment</h4>
+                        <h2 id="positive-sentiment">68%</h2>
+                        <small class="opacity-75">+5% this week</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-database fa-2x mb-3"></i>
+                        <h4 class="card-title">Data Sources</h4>
+                        <h2 id="sources-count">4</h2>
+                        <small class="opacity-75">All active</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-5">
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card h-100">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-pie-chart me-2"></i>
+                            Sentiment Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="sentiment-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card h-100">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            Source Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="source-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating and Trends -->
+        <div class="row mb-5">
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card h-100">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-star me-2"></i>
+                            Rating Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="rating-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card h-100">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Trends Over Time
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="trends-chart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Row -->
+        <div class="row mb-5">
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card h-100">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Top Pain Points
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <span class="insight-badge pain-point text-white">slow performance (23)</span>
+                            <span class="insight-badge pain-point text-white">bugs (18)</span>
+                            <span class="insight-badge pain-point text-white">crash (15)</span>
+                            <span class="insight-badge pain-point text-white">confusing (12)</span>
+                            <span class="insight-badge pain-point text-white">expensive (8)</span>
+                        </div>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Priority:</strong> Performance optimization needed - 23% of negative feedback mentions slow performance.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card chart-card h-100">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-thumbs-up me-2"></i>
+                            Key Advantages
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <span class="insight-badge advantage text-white">easy to use (45)</span>
+                            <span class="insight-badge advantage text-white">fast (38)</span>
+                            <span class="insight-badge advantage text-white">helpful (32)</span>
+                            <span class="insight-badge advantage text-white">reliable (28)</span>
+                            <span class="insight-badge advantage text-white">intuitive (25)</span>
+                        </div>
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Strength:</strong> User experience is highly praised - 45% of positive feedback highlights ease of use.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Strategic Recommendations
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="recommendation-card p-3 rounded">
+                                    <h6 class="text-primary mb-2">
+                                        <i class="fas fa-tachometer-alt me-2"></i>
+                                        Performance Focus
+                                    </h6>
+                                    <p class="mb-0 small">Optimize app performance to address 23% of negative feedback mentioning slow performance.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="recommendation-card p-3 rounded">
+                                    <h6 class="text-warning mb-2">
+                                        <i class="fas fa-bug me-2"></i>
+                                        Bug Resolution
+                                    </h6>
+                                    <p class="mb-0 small">Prioritize bug fixes - 18% of negative feedback mentions bugs or crashes.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="recommendation-card p-3 rounded">
+                                    <h6 class="text-success mb-2">
+                                        <i class="fas fa-heart me-2"></i>
+                                        UX Enhancement
+                                    </h6>
+                                    <p class="mb-0 small">Continue emphasizing ease of use - 45% of positive feedback highlights this strength.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card chart-card">
+                    <div class="chart-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-database me-2"></i>
+                            Data Sources Overview
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="source-card">
+                                    <i class="fab fa-apple fa-3x text-primary mb-3"></i>
+                                    <h6 class="fw-bold">App Store</h6>
+                                    <span class="badge bg-primary fs-6">342 reviews</span>
+                                    <p class="small text-muted mt-2 mb-0">iOS App Store reviews</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="source-card">
+                                    <i class="fab fa-google-play fa-3x text-success mb-3"></i>
+                                    <h6 class="fw-bold">Google Play</h6>
+                                    <span class="badge bg-success fs-6">456 reviews</span>
+                                    <p class="small text-muted mt-2 mb-0">Android Play Store reviews</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="source-card">
+                                    <i class="fas fa-ticket-alt fa-3x text-warning mb-3"></i>
+                                    <h6 class="fw-bold">Freshdesk</h6>
+                                    <span class="badge bg-warning fs-6">289 tickets</span>
+                                    <p class="small text-muted mt-2 mb-0">Support tickets</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="source-card">
+                                    <i class="fas fa-poll fa-3x text-info mb-3"></i>
+                                    <h6 class="fw-bold">Surveys</h6>
+                                    <span class="badge bg-info fs-6">160 responses</span>
+                                    <p class="small text-muted mt-2 mb-0">Customer surveys</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <hr class="my-4">
+                <p class="text-muted mb-2">
+                    <strong>App Review Analytics Dashboard</strong> | 
+                    <i class="fas fa-sync-alt live-indicator me-1"></i>
+                    Live Data | 
+                    Last Updated: <span id="last-updated"></span>
+                </p>
+                <p class="small text-muted">
+                    <i class="fas fa-share-alt me-1"></i>
+                    Share this dashboard with your team: 
+                    <strong>https://your-domain.com/dashboard.html</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced sample data
+        const sentimentData = {
+            values: [68, 18, 14],
+            labels: ['Positive', 'Negative', 'Neutral'],
+            colors: ['#28a745', '#dc3545', '#6c757d'],
+            textinfo: 'label+percent',
+            textfont: { size: 14 }
+        };
+
+        const sourceData = {
+            x: ['App Store', 'Google Play', 'Freshdesk', 'Surveys'],
+            y: [342, 456, 289, 160],
+            colors: ['#007bff', '#28a745', '#ffc107', '#17a2b8'],
+            text: ['342', '456', '289', '160'],
+            textposition: 'auto'
+        };
+
+        const ratingData = {
+            x: ['1★', '2★', '3★', '4★', '5★'],
+            y: [45, 67, 123, 456, 556],
+            colors: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#28a745']
+        };
+
+        const trendsData = {
+            x: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            y: [280, 320, 290, 357],
+            name: 'Review Volume'
+        };
+
+        // Create enhanced charts
+        Plotly.newPlot('sentiment-chart', [{
+            values: sentimentData.values,
+            labels: sentimentData.labels,
+            type: 'pie',
+            marker: { colors: sentimentData.colors },
+            textinfo: sentimentData.textinfo,
+            textfont: sentimentData.textfont,
+            hole: 0.4
+        }], {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            showlegend: true,
+            legend: { orientation: 'h', y: -0.1 }
+        });
+
+        Plotly.newPlot('source-chart', [{
+            x: sourceData.x,
+            y: sourceData.y,
+            type: 'bar',
+            marker: { 
+                color: sourceData.colors,
+                line: { color: 'rgba(0,0,0,0.1)', width: 1 }
+            },
+            text: sourceData.text,
+            textposition: sourceData.textposition
+        }], {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            xaxis: { title: 'Data Source' },
+            yaxis: { title: 'Number of Reviews' }
+        });
+
+        Plotly.newPlot('rating-chart', [{
+            x: ratingData.x,
+            y: ratingData.y,
+            type: 'bar',
+            marker: { 
+                color: ratingData.colors,
+                line: { color: 'rgba(0,0,0,0.1)', width: 1 }
+            }
+        }], {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            xaxis: { title: 'Rating' },
+            yaxis: { title: 'Number of Reviews' }
+        });
+
+        Plotly.newPlot('trends-chart', [{
+            x: trendsData.x,
+            y: trendsData.y,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: trendsData.name,
+            line: { color: '#007bff', width: 3 },
+            marker: { size: 8, color: '#007bff' }
+        }], {
+            margin: { t: 20, b: 20, l: 20, r: 20 },
+            xaxis: { title: 'Time Period' },
+            yaxis: { title: 'Number of Reviews' }
+        });
+
+        // Update last updated time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('last-updated').textContent = now.toLocaleString();
+        }
+        
+        updateTime();
+        setInterval(updateTime, 60000); // Update every minute
+
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate numbers on load
+            const counters = document.querySelectorAll('.metric-card h2');
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent.replace(/[^\d]/g, ''));
+                let current = 0;
+                const increment = target / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = counter.textContent.replace(/\d+/, target);
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = counter.textContent.replace(/\d+/, Math.floor(current));
+                    }
+                }, 30);
+            });
+        });
+    </script>
+</body>
+</html>
