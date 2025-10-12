@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Review Analytics Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px;
+            padding: 30px;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 10px 10px 0 0;
+            margin-right: 5px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        .nav-tabs .nav-link:hover {
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            transform: translateY(-2px);
+        }
+        .tab-content {
+            background: white;
+            border-radius: 0 15px 15px 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .metric-card { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-card h2 { 
+            font-size: 2.5rem; 
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .chart-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .chart-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
+        }
+        .insight-badge {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            margin: 3px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .pain-point { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .advantage { background: linear-gradient(135deg, #51cf66, #40c057); }
+        .recommendation-card {
+            border-left: 4px solid #667eea;
+            background: linear-gradient(135deg, #f8f9ff, #ffffff);
+        }
+        .source-card {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .source-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        .source-card.active {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+        }
+        .source-card.inactive {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            opacity: 0.7;
+        }
+        .header-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        .live-indicator {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .filter-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .data-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 500;
+        }
+        .table td {
+            border-color: #e9ecef;
+            vertical-align: middle;
+        }
+        .badge-source {
+            font-size: 0.8rem;
+            padding: 6px 10px;
+        }
+        .sentiment-positive { color: #28a745; }
+        .sentiment-negative { color: #dc3545; }
+        .sentiment-neutral { color: #6c757d; }
+        .rating-stars {
+            color: #ffc107;
+        }
+        .add-source-card {
+            border: 2px dashed #667eea;
+            background: linear-gradient(135deg, #f8f9ff, #ffffff);
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .add-source-card:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.05);
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="header-title mb-3">
+                    <i class="fas fa-chart-line me-3"></i>
+                    App Review Analytics Dashboard
+                </h1>
+                <p class="text-muted fs-5">
+                    <i class="fas fa-sync-alt live-indicator me-2"></i>
+                    Real-time insights from app stores, support tickets, and surveys
+                </p>
+                <hr class="my-4">
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                    <i class="fas fa-chart-pie me-2"></i>Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button" role="tab">
+                    <i class="fas fa-list me-2"></i>Reviews List
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sources-tab" data-bs-toggle="tab" data-bs-target="#sources" type="button" role="tab">
+                    <i class="fas fa-cog me-2"></i>Data Sources
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="dashboardTabsContent">
+            
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                
+                <!-- Time Period Selector -->
+                <div class="filter-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Time Period
+                            </h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="timePeriod" id="last7days" value="7" checked>
+                                <label class="btn btn-outline-primary" for="last7days">Last 7 days</label>
+
+                                <input type="radio" class="btn-check" name="timePeriod" id="lastMonth" value="30">
+                                <label class="btn btn-outline-primary" for="lastMonth">Last month</label>
+
+                                <input type="radio" class="btn-check" name="timePeriod" id="last3Months" value="90">
+                                <label class="btn btn-outline-primary" for="last3Months">3 months</label>
+
+                                <input type="radio" class="btn-check" name="timePeriod" id="last6Months" value="180">
+                                <label class="btn btn-outline-primary" for="last6Months">6 months</label>
+
+                                <input type="radio" class="btn-check" name="timePeriod" id="lastYear" value="365">
+                                <label class="btn btn-outline-primary" for="lastYear">1 year</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overview Cards -->
+                <div class="row mb-5">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-comments fa-2x mb-3"></i>
+                                <h4 class="card-title">Total Reviews</h4>
+                                <h2 id="total-reviews">1,247</h2>
+                                <small class="opacity-75">+12% this week</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-star fa-2x mb-3"></i>
+                                <h4 class="card-title">Avg Rating</h4>
+                                <h2 id="avg-rating">4.2</h2>
+                                <small class="opacity-75">+0.3 this month</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-smile fa-2x mb-3"></i>
+                                <h4 class="card-title">Positive Sentiment</h4>
+                                <h2 id="positive-sentiment">68%</h2>
+                                <small class="opacity-75">+5% this week</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-database fa-2x mb-3"></i>
+                                <h4 class="card-title">Data Sources</h4>
+                                <h2 id="sources-count">4</h2>
+                                <small class="opacity-75">All active</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row mb-5">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-pie-chart me-2"></i>
+                                    Sentiment Distribution
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="sentiment-chart" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    Source Distribution
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="source-chart" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rating and Trends -->
+                <div class="row mb-5">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-star me-2"></i>
+                                    Rating Distribution
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="rating-chart" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Trends Over Time
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="trends-chart" style="height: 350px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights Row -->
+                <div class="row mb-5">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Top Pain Points
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="mb-3">
+                                    <span class="insight-badge pain-point text-white">slow performance (23)</span>
+                                    <span class="insight-badge pain-point text-white">bugs (18)</span>
+                                    <span class="insight-badge pain-point text-white">crash (15)</span>
+                                    <span class="insight-badge pain-point text-white">confusing (12)</span>
+                                    <span class="insight-badge pain-point text-white">expensive (8)</span>
+                                </div>
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Priority:</strong> Performance optimization needed - 23% of negative feedback mentions slow performance.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-thumbs-up me-2"></i>
+                                    Key Advantages
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="mb-3">
+                                    <span class="insight-badge advantage text-white">easy to use (45)</span>
+                                    <span class="insight-badge advantage text-white">fast (38)</span>
+                                    <span class="insight-badge advantage text-white">helpful (32)</span>
+                                    <span class="insight-badge advantage text-white">reliable (28)</span>
+                                    <span class="insight-badge advantage text-white">intuitive (25)</span>
+                                </div>
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Strength:</strong> User experience is highly praised - 45% of positive feedback highlights ease of use.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="card chart-card">
+                            <div class="chart-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Strategic Recommendations
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="recommendation-card p-3 rounded">
+                                            <h6 class="text-primary mb-2">
+                                                <i class="fas fa-tachometer-alt me-2"></i>
+                                                Performance Focus
+                                            </h6>
+                                            <p class="mb-0 small">Optimize app performance to address 23% of negative feedback mentioning slow performance.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="recommendation-card p-3 rounded">
+                                            <h6 class="text-warning mb-2">
+                                                <i class="fas fa-bug me-2"></i>
+                                                Bug Resolution
+                                            </h6>
+                                            <p class="mb-0 small">Prioritize bug fixes - 18% of negative feedback mentions bugs or crashes.</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="recommendation-card p-3 rounded">
+                                            <h6 class="text-success mb-2">
+                                                <i class="fas fa-heart me-2"></i>
+                                                UX Enhancement
+                                            </h6>
+                                            <p class="mb-0 small">Continue emphasizing ease of use - 45% of positive feedback highlights this strength.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews List Tab -->
+            <div class="tab-pane fade" id="list" role="tabpanel">
+                <h4 class="mb-4">
+                    <i class="fas fa-list me-2"></i>
+                    All Reviews & Comments
+                </h4>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Source Filter</label>
+                            <select class="form-select" id="sourceFilter">
+                                <option value="">All Sources</option>
+                                <option value="app_store">App Store</option>
+                                <option value="google_play">Google Play</option>
+                                <option value="freshdesk">Freshdesk</option>
+                                <option value="google_forms">Google Forms</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Sentiment Filter</label>
+                            <select class="form-select" id="sentimentFilter">
+                                <option value="">All Sentiments</option>
+                                <option value="positive">Positive</option>
+                                <option value="negative">Negative</option>
+                                <option value="neutral">Neutral</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Rating Filter</label>
+                            <select class="form-select" id="ratingFilter">
+                                <option value="">All Ratings</option>
+                                <option value="5">5 Stars</option>
+                                <option value="4">4 Stars</option>
+                                <option value="3">3 Stars</option>
+                                <option value="2">2 Stars</option>
+                                <option value="1">1 Star</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Keyword Search</label>
+                            <input type="text" class="form-control" id="keywordSearch" placeholder="Search keywords...">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="date" class="form-control" id="startDate">
+                                </div>
+                                <div class="col-6">
+                                    <input type="date" class="form-control" id="endDate">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-end">
+                            <button class="btn btn-primary me-2" onclick="applyFilters()">
+                                <i class="fas fa-filter me-2"></i>Apply Filters
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Showing <strong id="resultsCount">1,247</strong> reviews
+                            <span id="filterSummary" class="ms-3"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Table -->
+                <div class="data-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Source</th>
+                                    <th>Content</th>
+                                    <th>Rating</th>
+                                    <th>Sentiment</th>
+                                    <th>Author</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviewsTableBody">
+                                <!-- Sample data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <nav aria-label="Reviews pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources Tab -->
+            <div class="tab-pane fade" id="sources" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>
+                            Data Sources Management
+                        </h4>
+                        <p class="text-muted">Configure and manage your data sources</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSourceModal">
+                            <i class="fas fa-plus me-2"></i>Add New Source
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Existing Sources -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="source-card active" data-source="app_store">
+                            <i class="fab fa-apple fa-3x text-primary mb-3"></i>
+                            <h6 class="fw-bold">App Store</h6>
+                            <span class="badge bg-success mb-2">Active</span>
+                            <p class="small text-muted mb-2">342 reviews</p>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSource('app_store')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="toggleSource('app_store')">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="source-card active" data-source="google_play">
+                            <i class="fab fa-google-play fa-3x text-success mb-3"></i>
+                            <h6 class="fw-bold">Google Play</h6>
+                            <span class="badge bg-success mb-2">Active</span>
+                            <p class="small text-muted mb-2">456 reviews</p>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSource('google_play')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="toggleSource('google_play')">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="source-card active" data-source="freshdesk">
+                            <i class="fas fa-ticket-alt fa-3x text-warning mb-3"></i>
+                            <h6 class="fw-bold">Freshdesk</h6>
+                            <span class="badge bg-success mb-2">Active</span>
+                            <p class="small text-muted mb-2">289 tickets</p>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSource('freshdesk')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="toggleSource('freshdesk')">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="source-card active" data-source="google_forms">
+                            <i class="fas fa-poll fa-3x text-info mb-3"></i>
+                            <h6 class="fw-bold">Google Forms</h6>
+                            <span class="badge bg-success mb-2">Active</span>
+                            <p class="small text-muted mb-2">160 responses</p>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editSource('google_forms')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="toggleSource('google_forms')">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add New Source Placeholder -->
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="source-card add-source-card" data-bs-toggle="modal" data-bs-target="#addSourceModal">
+                            <i class="fas fa-plus fa-3x mb-3"></i>
+                            <h6 class="fw-bold">Add New Source</h6>
+                            <p class="small text-muted mb-0">Click to add API or CSV source</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source Configuration Help -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-question-circle me-2"></i>
+                                    Source Configuration Guide
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>API Sources</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success me-2"></i>App Store RSS Feed</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Google Play API</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Freshdesk API</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Zendesk API</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>File Sources</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success me-2"></i>CSV Upload</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Excel Files</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Google Sheets</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>JSON Files</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <hr class="my-4">
+                <p class="text-muted mb-2">
+                    <strong>App Review Analytics Dashboard</strong> | 
+                    <i class="fas fa-sync-alt live-indicator me-1"></i>
+                    Live Data | 
+                    Last Updated: <span id="last-updated"></span>
+                </p>
+                <p class="small text-muted">
+                    <i class="fas fa-share-alt me-1"></i>
+                    Share this dashboard with your team: 
+                    <strong>https://yourusername.github.io/app-review-dashboard/</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Source Modal -->
+    <div class="modal fade" id="addSourceModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>
+                        Add New Data Source
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSourceForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Source Type</label>
+                                <select class="form-select" id="sourceType" required>
+                                    <option value="">Select source type</option>
+                                    <option value="api">API Integration</option>
+                                    <option value="csv">CSV Upload</option>
+                                    <option value="excel">Excel File</option>
+                                    <option value="google_sheets">Google Sheets</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Source Name</label>
+                                <input type="text" class="form-control" id="sourceName" placeholder="e.g., Customer Support API" required>
+                            </div>
+                        </div>
+                        
+                        <div id="apiConfig" style="display: none;">
+                            <h6 class="mb-3">API Configuration</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">API URL</label>
+                                    <input type="url" class="form-control" id="apiUrl" placeholder="https://api.example.com/endpoint">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">API Key</label>
+                                    <input type="password" class="form-control" id="apiKey" placeholder="Your API key">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Update Frequency</label>
+                                    <select class="form-select" id="updateFrequency">
+                                        <option value="hourly">Every Hour</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="manual">Manual Only</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Data Limit</label>
+                                    <input type="number" class="form-control" id="dataLimit" placeholder="100" value="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fileConfig" style="display: none;">
+                            <h6 class="mb-3">File Configuration</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Upload File</label>
+                                    <input type="file" class="form-control" id="fileUpload" accept=".csv,.xlsx,.json">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">File Format</label>
+                                    <select class="form-select" id="fileFormat">
+                                        <option value="csv">CSV</option>
+                                        <option value="excel">Excel</option>
+                                        <option value="json">JSON</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="sourceDescription" rows="3" placeholder="Describe this data source..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSource()">
+                        <i class="fas fa-save me-2"></i>Save Source
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample data for the reviews table
+        const sampleReviews = [
+            {
+                date: '2024-01-15',
+                source: 'app_store',
+                content: 'Great app! Easy to use and very helpful.',
+                rating: 5,
+                sentiment: 'positive',
+                author: 'John D.'
+            },
+            {
+                date: '2024-01-14',
+                source: 'google_play',
+                content: 'App keeps crashing on my device. Very frustrating.',
+                rating: 2,
+                sentiment: 'negative',
+                author: 'Sarah M.'
+            },
+            {
+                date: '2024-01-13',
+                source: 'freshdesk',
+                content: 'Need help with account setup. Support team was helpful.',
+                rating: null,
+                sentiment: 'neutral',
+                author: 'Mike R.'
+            },
+            {
+                date: '2024-01-12',
+                source: 'google_forms',
+                content: 'Survey response: The app meets my needs perfectly.',
+                rating: null,
+                sentiment: 'positive',
+                author: 'Anonymous'
+            },
+            {
+                date: '2024-01-11',
+                source: 'app_store',
+                content: 'Good app but could be faster. Overall satisfied.',
+                rating: 4,
+                sentiment: 'neutral',
+                author: 'Lisa K.'
+            }
+        ];
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            populateReviewsTable();
+            setupEventListeners();
+            updateTime();
+            setInterval(updateTime, 60000);
+        });
+
+        function initializeCharts() {
+            // Enhanced sample data
+            const sentimentData = {
+                values: [68, 18, 14],
+                labels: ['Positive', 'Negative', 'Neutral'],
+                colors: ['#28a745', '#dc3545', '#6c757d'],
+                textinfo: 'label+percent',
+                textfont: { size: 14 }
+            };
+
+            const sourceData = {
+                x: ['App Store', 'Google Play', 'Freshdesk', 'Surveys'],
+                y: [342, 456, 289, 160],
+                colors: ['#007bff', '#28a745', '#ffc107', '#17a2b8'],
+                text: ['342', '456', '289', '160'],
+                textposition: 'auto'
+            };
+
+            const ratingData = {
+                x: ['1★', '2★', '3★', '4★', '5★'],
+                y: [45, 67, 123, 456, 556],
+                colors: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#28a745']
+            };
+
+            const trendsData = {
+                x: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                y: [280, 320, 290, 357],
+                name: 'Review Volume'
+            };
+
+            // Create enhanced charts
+            Plotly.newPlot('sentiment-chart', [{
+                values: sentimentData.values,
+                labels: sentimentData.labels,
+                type: 'pie',
+                marker: { colors: sentimentData.colors },
+                textinfo: sentimentData.textinfo,
+                textfont: sentimentData.textfont,
+                hole: 0.4
+            }], {
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.1 }
+            });
+
+            Plotly.newPlot('source-chart', [{
+                x: sourceData.x,
+                y: sourceData.y,
+                type: 'bar',
+                marker: { 
+                    color: sourceData.colors,
+                    line: { color: 'rgba(0,0,0,0.1)', width: 1 }
+                },
+                text: sourceData.text,
+                textposition: sourceData.textposition
+            }], {
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                xaxis: { title: 'Data Source' },
+                yaxis: { title: 'Number of Reviews' }
+            });
+
+            Plotly.newPlot('rating-chart', [{
+                x: ratingData.x,
+                y: ratingData.y,
+                type: 'bar',
+                marker: { 
+                    color: ratingData.colors,
+                    line: { color: 'rgba(0,0,0,0.1)', width: 1 }
+                }
+            }], {
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                xaxis: { title: 'Rating' },
+                yaxis: { title: 'Number of Reviews' }
+            });
+
+            Plotly.newPlot('trends-chart', [{
+                x: trendsData.x,
+                y: trendsData.y,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: trendsData.name,
+                line: { color: '#007bff', width: 3 },
+                marker: { size: 8, color: '#007bff' }
+            }], {
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                xaxis: { title: 'Time Period' },
+                yaxis: { title: 'Number of Reviews' }
+            });
+        }
+
+        function populateReviewsTable() {
+            const tbody = document.getElementById('reviewsTableBody');
+            tbody.innerHTML = '';
+
+            sampleReviews.forEach(review => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${review.date}</td>
+                    <td><span class="badge badge-source bg-primary">${getSourceName(review.source)}</span></td>
+                    <td>${review.content}</td>
+                    <td>${review.rating ? generateStars(review.rating) : 'N/A'}</td>
+                    <td><span class="sentiment-${review.sentiment}">${review.sentiment}</span></td>
+                    <td>${review.author}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewReview('${review.date}', '${review.source}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getSourceName(source) {
+            const names = {
+                'app_store': 'App Store',
+                'google_play': 'Google Play',
+                'freshdesk': 'Freshdesk',
+                'google_forms': 'Google Forms'
+            };
+            return names[source] || source;
+        }
+
+        function generateStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<i class="fas fa-star rating-stars"></i>';
+                } else {
+                    stars += '<i class="far fa-star rating-stars"></i>';
+                }
+            }
+            return stars;
+        }
+
+        function setupEventListeners() {
+            // Time period selector
+            document.querySelectorAll('input[name="timePeriod"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateDashboardForPeriod(this.value);
+                });
+            });
+
+            // Source type selector in modal
+            document.getElementById('sourceType').addEventListener('change', function() {
+                const apiConfig = document.getElementById('apiConfig');
+                const fileConfig = document.getElementById('fileConfig');
+                
+                if (this.value === 'api') {
+                    apiConfig.style.display = 'block';
+                    fileConfig.style.display = 'none';
+                } else if (['csv', 'excel', 'google_sheets'].includes(this.value)) {
+                    apiConfig.style.display = 'none';
+                    fileConfig.style.display = 'block';
+                } else {
+                    apiConfig.style.display = 'none';
+                    fileConfig.style.display = 'none';
+                }
+            });
+        }
+
+        function updateDashboardForPeriod(days) {
+            // This would normally update the dashboard data based on the selected period
+            console.log(`Updating dashboard for last ${days} days`);
+            
+            // Update the overview cards with new data
+            const metrics = {
+                7: { reviews: 156, rating: 4.3, sentiment: 72 },
+                30: { reviews: 1,247, rating: 4.2, sentiment: 68 },
+                90: { reviews: 3,891, rating: 4.1, sentiment: 65 },
+                180: { reviews: 7,234, rating: 4.0, sentiment: 63 },
+                365: { reviews: 14,567, rating: 3.9, sentiment: 61 }
+            };
+
+            const data = metrics[days] || metrics[30];
+            
+            document.getElementById('total-reviews').textContent = data.reviews.toLocaleString();
+            document.getElementById('avg-rating').textContent = data.rating;
+            document.getElementById('positive-sentiment').textContent = data.sentiment + '%';
+        }
+
+        function applyFilters() {
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            const sentimentFilter = document.getElementById('sentimentFilter').value;
+            const ratingFilter = document.getElementById('ratingFilter').value;
+            const keywordSearch = document.getElementById('keywordSearch').value.toLowerCase();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            let filteredReviews = sampleReviews.filter(review => {
+                if (sourceFilter && review.source !== sourceFilter) return false;
+                if (sentimentFilter && review.sentiment !== sentimentFilter) return false;
+                if (ratingFilter && review.rating != ratingFilter) return false;
+                if (keywordSearch && !review.content.toLowerCase().includes(keywordSearch)) return false;
+                if (startDate && review.date < startDate) return false;
+                if (endDate && review.date > endDate) return false;
+                return true;
+            });
+
+            // Update results count
+            document.getElementById('resultsCount').textContent = filteredReviews.length;
+            
+            // Update filter summary
+            const filters = [];
+            if (sourceFilter) filters.push(`Source: ${getSourceName(sourceFilter)}`);
+            if (sentimentFilter) filters.push(`Sentiment: ${sentimentFilter}`);
+            if (ratingFilter) filters.push(`Rating: ${ratingFilter} stars`);
+            if (keywordSearch) filters.push(`Keyword: "${keywordSearch}"`);
+            
+            document.getElementById('filterSummary').textContent = 
+                filters.length > 0 ? `Filters: ${filters.join(', ')}` : '';
+
+            // Repopulate table with filtered data
+            populateFilteredTable(filteredReviews);
+        }
+
+        function populateFilteredTable(reviews) {
+            const tbody = document.getElementById('reviewsTableBody');
+            tbody.innerHTML = '';
+
+            reviews.forEach(review => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${review.date}</td>
+                    <td><span class="badge badge-source bg-primary">${getSourceName(review.source)}</span></td>
+                    <td>${review.content}</td>
+                    <td>${review.rating ? generateStars(review.rating) : 'N/A'}</td>
+                    <td><span class="sentiment-${review.sentiment}">${review.sentiment}</span></td>
+                    <td>${review.author}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewReview('${review.date}', '${review.source}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('sourceFilter').value = '';
+            document.getElementById('sentimentFilter').value = '';
+            document.getElementById('ratingFilter').value = '';
+            document.getElementById('keywordSearch').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            
+            document.getElementById('resultsCount').textContent = sampleReviews.length;
+            document.getElementById('filterSummary').textContent = '';
+            
+            populateReviewsTable();
+        }
+
+        function toggleSource(sourceId) {
+            const sourceCard = document.querySelector(`[data-source="${sourceId}"]`);
+            const badge = sourceCard.querySelector('.badge');
+            const button = sourceCard.querySelector('.btn-outline-danger i');
+            
+            if (sourceCard.classList.contains('active')) {
+                sourceCard.classList.remove('active');
+                sourceCard.classList.add('inactive');
+                badge.textContent = 'Inactive';
+                badge.className = 'badge bg-danger mb-2';
+                button.className = 'fas fa-play';
+            } else {
+                sourceCard.classList.remove('inactive');
+                sourceCard.classList.add('active');
+                badge.textContent = 'Active';
+                badge.className = 'badge bg-success mb-2';
+                button.className = 'fas fa-pause';
+            }
+        }
+
+        function editSource(sourceId) {
+            // This would open an edit modal for the source
+            alert(`Edit source: ${sourceId}`);
+        }
+
+        function saveSource() {
+            const form = document.getElementById('addSourceForm');
+            const formData = new FormData(form);
+            
+            // This would normally save the source configuration
+            alert('Source saved successfully!');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addSourceModal'));
+            modal.hide();
+            
+            // Reset form
+            form.reset();
+            document.getElementById('apiConfig').style.display = 'none';
+            document.getElementById('fileConfig').style.display = 'none';
+        }
+
+        function viewReview(date, source) {
+            // This would open a detailed view of the review
+            alert(`Viewing review from ${date} (${source})`);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('last-updated').textContent = now.toLocaleString();
+        }
+
+        // Animate numbers on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const counters = document.querySelectorAll('.metric-card h2');
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent.replace(/[^\d]/g, ''));
+                let current = 0;
+                const increment = target / 50;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = counter.textContent.replace(/\d+/, target);
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = counter.textContent.replace(/\d+/, Math.floor(current));
+                    }
+                }, 30);
+            });
+        });
+    </script>
+</body>
+</html>
