@@ -1023,7 +1023,7 @@
                         <div class="mt-2">
                             <small class="text-muted">
                                 <span id="pendingCount">0</span> reviews need to be reviewed • 
-                                You can skip this step and review them later
+                                Fill out the required fields (date and content) and click Save, or delete reviews you don't want to include
                             </small>
                         </div>
                     </div>
@@ -1033,11 +1033,11 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" onclick="skipReview()">
-                        <i class="fas fa-clock me-2"></i>Review Later
+                    <button type="button" class="btn btn-outline-secondary" onclick="skipAllReviews()">
+                        <i class="fas fa-times me-2"></i>Skip All
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="completeReview()">
-                        <i class="fas fa-check me-2"></i>Complete Review
+                    <button type="button" class="btn btn-primary" onclick="saveReviews()">
+                        <i class="fas fa-save me-2"></i>Save
                     </button>
                 </div>
             </div>
@@ -1887,21 +1887,22 @@
             modal.show();
         }
 
-        function skipReview() {
+        function skipAllReviews() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
             modal.hide();
             
-            // Update pending count display
+            // Remove all pending reviews from this session (they were explicitly skipped)
+            pendingReviews = [];
             updatePendingCount();
             
-            alert(`⏰ Review skipped. ${pendingReviews.length} reviews are pending review and can be reviewed later. You'll see a notification in the header when reviews need attention.`);
+            alert(`⏰ All reviews skipped. No reviews were added to the system.`);
         }
 
-        function completeReview() {
+        function saveReviews() {
             const container = document.getElementById('reviewContainer');
             const reviewItems = container.querySelectorAll('.card');
             const newValidReviews = [];
-            const completedCount = newValidReviews.length;
+            const remainingPendingReviews = [];
             const totalInModal = reviewItems.length;
             
             reviewItems.forEach((item, index) => {
@@ -1920,15 +1921,17 @@
                     
                     newValidReviews.push(review);
                     reviewedReviews.push(review);
+                } else {
+                    // Keep incomplete reviews as pending
+                    remainingPendingReviews.push(pendingReviews[index]);
                 }
             });
             
             // Add the reviewed reviews to the main dataset
             allReviews = allReviews.concat(newValidReviews);
             
-            // Remove only the reviews that were in this modal session
-            // Keep any other pending reviews from previous uploads
-            pendingReviews = pendingReviews.slice(totalInModal);
+            // Update pending reviews - remove the ones that were in this modal, add back the incomplete ones
+            pendingReviews = pendingReviews.slice(totalInModal).concat(remainingPendingReviews);
             
             // Update UI
             updateDashboardMetrics(allReviews);
@@ -1940,17 +1943,15 @@
             modal.hide();
             
             // Show appropriate message based on what happened
-            const remainingPending = pendingReviews.length;
             if (newValidReviews.length === totalInModal) {
                 // All reviews in the modal were completed
-                alert(`✅ Successfully reviewed and added ${newValidReviews.length} reviews to the system. These reviews are now marked as "edited" in the table.`);
+                alert(`✅ Successfully saved ${newValidReviews.length} reviews to the system. These reviews are now marked as "edited" in the table.`);
             } else if (newValidReviews.length > 0) {
-                // Some reviews were completed, some were skipped
-                const skippedCount = totalInModal - newValidReviews.length;
-                alert(`✅ Successfully reviewed and added ${newValidReviews.length} reviews to the system. ${skippedCount} reviews were skipped and ${remainingPending} reviews still need review.`);
+                // Some reviews were saved, some still need review
+                alert(`✅ Successfully saved ${newValidReviews.length} reviews to the system. ${remainingPendingReviews.length} reviews still need review and will remain in the notification above the table.`);
             } else {
-                // No reviews were completed (all were skipped)
-                alert(`⏰ No reviews were completed. ${remainingPending} reviews still need review and are shown in the notification above the table.`);
+                // No reviews were saved (all still need review)
+                alert(`⏰ No reviews were saved. All ${totalInModal} reviews still need review and are shown in the notification above the table.`);
             }
         }
 
