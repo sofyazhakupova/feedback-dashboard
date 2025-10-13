@@ -1901,6 +1901,8 @@
             const container = document.getElementById('reviewContainer');
             const reviewItems = container.querySelectorAll('.card');
             const newValidReviews = [];
+            const completedCount = newValidReviews.length;
+            const totalInModal = reviewItems.length;
             
             reviewItems.forEach((item, index) => {
                 const date = document.getElementById(`date_${index}`).value;
@@ -1924,9 +1926,9 @@
             // Add the reviewed reviews to the main dataset
             allReviews = allReviews.concat(newValidReviews);
             
-            // Remove all pending reviews that were in this review session
-            // (they were either completed or skipped)
-            pendingReviews = [];
+            // Remove only the reviews that were in this modal session
+            // Keep any other pending reviews from previous uploads
+            pendingReviews = pendingReviews.slice(totalInModal);
             
             // Update UI
             updateDashboardMetrics(allReviews);
@@ -1937,7 +1939,19 @@
             const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
             modal.hide();
             
-            alert(`✅ Successfully reviewed and added ${newValidReviews.length} reviews to the system. These reviews are now marked as "edited" in the table.`);
+            // Show appropriate message based on what happened
+            const remainingPending = pendingReviews.length;
+            if (newValidReviews.length === totalInModal) {
+                // All reviews in the modal were completed
+                alert(`✅ Successfully reviewed and added ${newValidReviews.length} reviews to the system. These reviews are now marked as "edited" in the table.`);
+            } else if (newValidReviews.length > 0) {
+                // Some reviews were completed, some were skipped
+                const skippedCount = totalInModal - newValidReviews.length;
+                alert(`✅ Successfully reviewed and added ${newValidReviews.length} reviews to the system. ${skippedCount} reviews were skipped and ${remainingPending} reviews still need review.`);
+            } else {
+                // No reviews were completed (all were skipped)
+                alert(`⏰ No reviews were completed. ${remainingPending} reviews still need review and are shown in the notification above the table.`);
+            }
         }
 
         function removeReview(index) {
