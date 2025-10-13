@@ -944,6 +944,9 @@
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSourceModal">
                             <i class="fas fa-plus me-2"></i>Add New Source
                         </button>
+                        <button class="btn btn-outline-warning ms-2" onclick="showKeywordsManager()">
+                            <i class="fas fa-tags me-2"></i>Keywords Manager
+                        </button>
                         <button class="btn btn-outline-danger ms-2" onclick="clearAllData()">
                             <i class="fas fa-trash me-2"></i>Clear All Data
                         </button>
@@ -1270,6 +1273,169 @@
         </div>
     </div>
 
+    <!-- Keywords Manager Modal -->
+    <div class="modal fade" id="keywordsManagerModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-tags me-2"></i>
+                        Keywords Manager - Golf App Analysis
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Keywords Categories -->
+                    <div class="row">
+                        <!-- Competitors -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-trophy me-2"></i>
+                                        Competitors
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" id="newCompetitorKeyword" placeholder="Add competitor name...">
+                                            <button class="btn btn-outline-danger" onclick="addKeyword('competitors', 'newCompetitorKeyword')">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="competitorsKeywords" class="mb-2">
+                                        <!-- Competitors keywords will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Golf Features -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-golf-ball me-2"></i>
+                                        Golf Features
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" id="newGolfFeatureKeyword" placeholder="Add golf feature...">
+                                            <button class="btn btn-outline-success" onclick="addKeyword('golfFeatures', 'newGolfFeatureKeyword')">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="golfFeaturesKeywords" class="mb-2">
+                                        <!-- Golf features keywords will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature Requests -->
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-lightbulb me-2"></i>
+                                        Feature Requests
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" class="form-control" id="newFeatureRequestKeyword" placeholder="Add feature request...">
+                                            <button class="btn btn-outline-warning" onclick="addKeyword('featureRequests', 'newFeatureRequestKeyword')">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="featureRequestsKeywords" class="mb-2">
+                                        <!-- Feature requests keywords will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Smart Suggestions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-magic me-2"></i>
+                                        Smart Suggestions from Reviews
+                                    </h6>
+                                    <small class="text-muted">Keywords automatically detected from your review content</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <h6 class="text-danger">Potential Competitors:</h6>
+                                            <div id="suggestedCompetitors" class="mb-3">
+                                                <p class="text-muted small">No suggestions yet</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-success">Golf Terms:</h6>
+                                            <div id="suggestedGolfTerms" class="mb-3">
+                                                <p class="text-muted small">No suggestions yet</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-warning">Feature Mentions:</h6>
+                                            <div id="suggestedFeatures" class="mb-3">
+                                                <p class="text-muted small">No suggestions yet</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CSV Template Download -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-download me-2"></i>
+                                        Golf App Review CSV Template
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-3">Download a CSV template optimized for golf app reviews with pre-configured columns:</p>
+                                    <button class="btn btn-primary" onclick="downloadGolfCSVTemplate()">
+                                        <i class="fas fa-download me-2"></i>Download Golf CSV Template
+                                    </button>
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <strong>Template includes:</strong> date, source, content, author, rating, course_name, handicap, 
+                                            weather_conditions, round_type, feature_used, competitor_mentioned, sentiment, category
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateSmartSuggestions()">
+                        <i class="fas fa-refresh me-2"></i>Update Suggestions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Global data storage
@@ -1277,6 +1443,13 @@
         let dataSources = [];
         let pendingReviews = []; // Reviews that need manual review
         let reviewedReviews = []; // Reviews that have been manually edited
+
+        // Keywords Manager Storage
+        let customKeywords = {
+            competitors: ['Golfshot', '18Birdies', 'SwingU', 'GolfNow', 'GolfLogix', 'Arccos', 'Shot Scope'],
+            golfFeatures: ['GPS', 'yardage', 'scorecard', 'handicap', 'tee times', 'course guide', 'weather', 'shot tracking', 'putting', 'driving range'],
+            featureRequests: ['dark mode', 'offline mode', 'Apple Watch', 'Android Wear', 'tournament mode', 'social features', 'leaderboard']
+        };
 
         // Initialize data from localStorage on page load
         function initializeFromStorage() {
@@ -1304,6 +1477,12 @@
                 reviewedReviews = JSON.parse(savedReviewed);
             }
 
+            // Load custom keywords
+            const savedKeywords = localStorage.getItem('appReviewScraper_keywords');
+            if (savedKeywords) {
+                customKeywords = JSON.parse(savedKeywords);
+            }
+
             // Update UI with loaded data
             updateDashboardMetrics(allReviews);
             updateReviewsTable();
@@ -1319,6 +1498,7 @@
             localStorage.setItem('appReviewScraper_sources', JSON.stringify(dataSources));
             localStorage.setItem('appReviewScraper_pending', JSON.stringify(pendingReviews));
             localStorage.setItem('appReviewScraper_reviewed', JSON.stringify(reviewedReviews));
+            localStorage.setItem('appReviewScraper_keywords', JSON.stringify(customKeywords));
         }
 
         // Clear all stored data
@@ -1475,30 +1655,39 @@
             document.getElementById('total-reviews').textContent = reviews.length.toLocaleString();
 
             // Calculate total average rating
-            const reviewsWithRating = reviews.filter(r => r.rating && !isNaN(r.rating));
+            const reviewsWithRating = reviews.filter(r => {
+                const rating = parseFloat(r.rating);
+                return !isNaN(rating) && rating > 0 && rating <= 5;
+            });
             if (reviewsWithRating.length > 0) {
-                const avgRating = reviewsWithRating.reduce((sum, r) => sum + r.rating, 0) / reviewsWithRating.length;
-                document.getElementById('total-avg-rating').textContent = avgRating.toFixed(1);
+                const avgRating = reviewsWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviewsWithRating.length;
+                document.getElementById('total-avg-rating').textContent = Math.round(avgRating * 10) / 10;
             } else {
                 document.getElementById('total-avg-rating').textContent = '0.0';
             }
 
             // Calculate Play Store average
             const playStoreReviews = reviews.filter(r => r.source === 'google_play');
-            const playStoreWithRating = playStoreReviews.filter(r => r.rating && !isNaN(r.rating));
+            const playStoreWithRating = playStoreReviews.filter(r => {
+                const rating = parseFloat(r.rating);
+                return !isNaN(rating) && rating > 0 && rating <= 5;
+            });
             if (playStoreWithRating.length > 0) {
-                const playStoreAvg = playStoreWithRating.reduce((sum, r) => sum + r.rating, 0) / playStoreWithRating.length;
-                document.getElementById('playstore-avg-rating').textContent = playStoreAvg.toFixed(1);
+                const playStoreAvg = playStoreWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / playStoreWithRating.length;
+                document.getElementById('playstore-avg-rating').textContent = Math.round(playStoreAvg * 10) / 10;
             } else {
                 document.getElementById('playstore-avg-rating').textContent = '0.0';
             }
 
             // Calculate Apple Store average
             const appStoreReviews = reviews.filter(r => r.source === 'app_store');
-            const appStoreWithRating = appStoreReviews.filter(r => r.rating && !isNaN(r.rating));
+            const appStoreWithRating = appStoreReviews.filter(r => {
+                const rating = parseFloat(r.rating);
+                return !isNaN(rating) && rating > 0 && rating <= 5;
+            });
             if (appStoreWithRating.length > 0) {
-                const appStoreAvg = appStoreWithRating.reduce((sum, r) => sum + r.rating, 0) / appStoreWithRating.length;
-                document.getElementById('appstore-avg-rating').textContent = appStoreAvg.toFixed(1);
+                const appStoreAvg = appStoreWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / appStoreWithRating.length;
+                document.getElementById('appstore-avg-rating').textContent = Math.round(appStoreAvg * 10) / 10;
             } else {
                 document.getElementById('appstore-avg-rating').textContent = '0.0';
             }
@@ -2313,7 +2502,11 @@
         }
 
         function generateStars(rating) {
-            return `<span class="badge bg-light text-dark" style="border: 1px solid var(--github-border);">${rating}</span>`;
+            const cleanRating = parseFloat(rating);
+            if (isNaN(cleanRating) || cleanRating < 1 || cleanRating > 5) {
+                return `<span class="badge bg-light text-dark" style="border: 1px solid var(--github-border);">N/A</span>`;
+            }
+            return `<span class="badge bg-light text-dark" style="border: 1px solid var(--github-border);">${Math.round(cleanRating * 10) / 10}</span>`;
         }
 
         function applyFilters() {
@@ -2883,7 +3076,7 @@
             
             reviews.forEach(review => {
                 const content = review.content.toLowerCase();
-                const rating = review.rating || 0;
+                const rating = parseFloat(review.rating) || 0;
                 
                 // Only consider reviews with low ratings or negative sentiment
                 if (rating <= 2 || content.includes('bad') || content.includes('terrible') || content.includes('awful')) {
@@ -2919,7 +3112,7 @@
             
             reviews.forEach(review => {
                 const content = review.content.toLowerCase();
-                const rating = review.rating || 0;
+                const rating = parseFloat(review.rating) || 0;
                 
                 // Only consider reviews with high ratings or positive sentiment
                 if (rating >= 4 || content.includes('great') || content.includes('excellent') || content.includes('love')) {
@@ -3029,6 +3222,205 @@
             const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
             const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
             return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
+
+        // Keywords Manager Functions
+        function showKeywordsManager() {
+            loadKeywordsManager();
+            const modal = new bootstrap.Modal(document.getElementById('keywordsManagerModal'));
+            modal.show();
+        }
+
+        function loadKeywordsManager() {
+            // Load competitors
+            const competitorsContainer = document.getElementById('competitorsKeywords');
+            competitorsContainer.innerHTML = customKeywords.competitors.map(keyword => 
+                `<span class="badge bg-danger me-1 mb-1">
+                    ${keyword}
+                    <button class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" onclick="removeKeyword('competitors', '${keyword}')"></button>
+                </span>`
+            ).join('');
+
+            // Load golf features
+            const golfFeaturesContainer = document.getElementById('golfFeaturesKeywords');
+            golfFeaturesContainer.innerHTML = customKeywords.golfFeatures.map(keyword => 
+                `<span class="badge bg-success me-1 mb-1">
+                    ${keyword}
+                    <button class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" onclick="removeKeyword('golfFeatures', '${keyword}')"></button>
+                </span>`
+            ).join('');
+
+            // Load feature requests
+            const featureRequestsContainer = document.getElementById('featureRequestsKeywords');
+            featureRequestsContainer.innerHTML = customKeywords.featureRequests.map(keyword => 
+                `<span class="badge bg-warning text-dark me-1 mb-1">
+                    ${keyword}
+                    <button class="btn-close btn-close-dark ms-1" style="font-size: 0.7em;" onclick="removeKeyword('featureRequests', '${keyword}')"></button>
+                </span>`
+            ).join('');
+
+            // Update smart suggestions
+            updateSmartSuggestions();
+        }
+
+        function addKeyword(category, inputId) {
+            const input = document.getElementById(inputId);
+            const keyword = input.value.trim().toLowerCase();
+            
+            if (keyword && !customKeywords[category].includes(keyword)) {
+                customKeywords[category].push(keyword);
+                saveToStorage();
+                loadKeywordsManager();
+                input.value = '';
+            }
+        }
+
+        function removeKeyword(category, keyword) {
+            const index = customKeywords[category].indexOf(keyword);
+            if (index > -1) {
+                customKeywords[category].splice(index, 1);
+                saveToStorage();
+                loadKeywordsManager();
+            }
+        }
+
+        function updateSmartSuggestions() {
+            if (allReviews.length === 0) {
+                document.getElementById('suggestedCompetitors').innerHTML = '<p class="text-muted small">Upload reviews to get suggestions</p>';
+                document.getElementById('suggestedGolfTerms').innerHTML = '<p class="text-muted small">Upload reviews to get suggestions</p>';
+                document.getElementById('suggestedFeatures').innerHTML = '<p class="text-muted small">Upload reviews to get suggestions</p>';
+                return;
+            }
+
+            // Analyze reviews for suggestions
+            const allText = allReviews.map(r => r.content).join(' ').toLowerCase();
+            
+            // Golf app competitor suggestions
+            const competitorPatterns = [
+                /(golfshot|18birdies|swingu|golfnow|golflogix|arccos|shot scope|the grint|golf pad|hole19)/gi,
+                /(vs|compared to|better than|instead of|alternative to)/gi
+            ];
+            
+            const suggestedCompetitors = [];
+            competitorPatterns[0].exec(allText);
+            let match;
+            while ((match = competitorPatterns[0].exec(allText)) !== null) {
+                if (!customKeywords.competitors.includes(match[0].toLowerCase())) {
+                    suggestedCompetitors.push(match[0]);
+                }
+            }
+            
+            // Golf terms suggestions
+            const golfTerms = [
+                'handicap', 'par', 'birdie', 'eagle', 'bogey', 'double bogey', 'albatross', 'hole in one',
+                'fairway', 'rough', 'green', 'bunker', 'water hazard', 'tee box', 'putting green',
+                'driver', 'irons', 'wedge', 'putter', 'hybrid', 'wood', 'cart', 'caddie',
+                'stroke play', 'match play', 'scramble', 'best ball', 'tournament', 'league'
+            ];
+            
+            const suggestedGolfTerms = golfTerms.filter(term => 
+                allText.includes(term) && !customKeywords.golfFeatures.includes(term)
+            );
+
+            // Feature suggestions
+            const featurePatterns = [
+                /(need|want|wish|should|could|please|add|implement|feature|function)/gi,
+                /(gps|tracking|scoring|social|sharing|weather|course|tee time|booking)/gi
+            ];
+            
+            const suggestedFeatures = [];
+            const featureMatches = allText.match(/need.*?feature|want.*?function|add.*?option/gi);
+            if (featureMatches) {
+                featureMatches.forEach(match => {
+                    const words = match.split(' ').filter(word => word.length > 3);
+                    words.forEach(word => {
+                        if (!customKeywords.featureRequests.includes(word.toLowerCase())) {
+                            suggestedFeatures.push(word.toLowerCase());
+                        }
+                    });
+                });
+            }
+
+            // Update UI
+            updateSuggestionContainer('suggestedCompetitors', suggestedCompetitors.slice(0, 10));
+            updateSuggestionContainer('suggestedGolfTerms', suggestedGolfTerms.slice(0, 10));
+            updateSuggestionContainer('suggestedFeatures', suggestedFeatures.slice(0, 10));
+        }
+
+        function updateSuggestionContainer(containerId, suggestions) {
+            const container = document.getElementById(containerId);
+            if (suggestions.length === 0) {
+                container.innerHTML = '<p class="text-muted small">No new suggestions found</p>';
+                return;
+            }
+
+            container.innerHTML = suggestions.map(suggestion => 
+                `<span class="badge bg-light text-dark me-1 mb-1" style="cursor: pointer;" onclick="addSuggestion('${suggestion}', '${containerId}')">
+                    ${suggestion}
+                    <i class="fas fa-plus ms-1"></i>
+                </span>`
+            ).join('');
+        }
+
+        function addSuggestion(suggestion, containerId) {
+            let category;
+            switch(containerId) {
+                case 'suggestedCompetitors':
+                    category = 'competitors';
+                    break;
+                case 'suggestedGolfTerms':
+                    category = 'golfFeatures';
+                    break;
+                case 'suggestedFeatures':
+                    category = 'featureRequests';
+                    break;
+            }
+            
+            if (category && !customKeywords[category].includes(suggestion.toLowerCase())) {
+                customKeywords[category].push(suggestion.toLowerCase());
+                saveToStorage();
+                loadKeywordsManager();
+            }
+        }
+
+        function downloadGolfCSVTemplate() {
+            const csvContent = [
+                'date,source,content,author,rating,course_name,handicap,weather_conditions,round_type,feature_used,competitor_mentioned,sentiment,category',
+                '2024-01-01,app_store,"Great app for tracking my rounds! GPS is accurate.",John Doe,5,Pebble Beach,12,sunny,tournament,gps,none,positive,feature',
+                '2024-01-02,google_play,"Better than Golfshot, but needs dark mode.",Jane Smith,4,Augusta National,8,cloudy,casual,scorecard,golfshot,positive,feature_request',
+                '2024-01-03,freshdesk,"Having issues with yardage calculations on hole 7.",Bob Johnson,2,St Andrews,15,rainy,practice,gps,none,negative,bug_report'
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'golf_app_reviews_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Enhanced keyword extraction using custom keywords
+        function extractKeywordsWithCustom(content) {
+            if (!content) return [];
+            
+            const keywords = [];
+            const contentLower = content.toLowerCase();
+            
+            // Check custom keywords
+            Object.values(customKeywords).flat().forEach(keyword => {
+                if (contentLower.includes(keyword.toLowerCase())) {
+                    keywords.push(keyword);
+                }
+            });
+            
+            // Add existing keyword extraction
+            const existingKeywords = extractKeywords(content);
+            keywords.push(...existingKeywords);
+            
+            return [...new Set(keywords)]; // Remove duplicates
         }
     </script>
 </body>
