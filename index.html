@@ -929,8 +929,7 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Source Type</label>
                                 <select class="form-select" id="sourceType" required>
-                                    <option value="">Select source type</option>
-                                    <option value="csv">CSV Upload</option>
+                                    <option value="csv" selected>CSV Upload</option>
                                     <option value="excel">Excel File</option>
                                     <option value="json">JSON File</option>
                                     <option value="api">API Integration</option>
@@ -1115,11 +1114,20 @@
                                     <div class="card-header">
                                         <h6 class="mb-0">
                                             <i class="fas fa-user-tag me-2"></i>
-                                            User Type Analysis
+                                            User Type
                                         </h6>
                                     </div>
                                     <div class="card-body">
-                                        <div id="editUserTypeDisplay"></div>
+                                        <div class="mb-3">
+                                            <label class="form-label">User Type</label>
+                                            <select class="form-select" id="editUserType">
+                                                <option value="unknown">Unknown</option>
+                                                <option value="free">Free User</option>
+                                                <option value="premium">Premium User</option>
+                                            </select>
+                                            <small class="text-muted">You can override the system's analysis</small>
+                                        </div>
+                                        <div id="editUserTypeAnalysis"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1806,7 +1814,7 @@
             }
 
             allReviews.slice(0, 50).forEach(review => {
-                const userType = analyzeUserType(review.content, review.author);
+                const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
                 const editedBadge = review.edited ? '<span class="badge bg-warning text-dark ms-1">edited</span>' : '';
@@ -1888,7 +1896,7 @@
             tbody.innerHTML = '';
 
             reviews.slice(0, 50).forEach(review => {
-                const userType = analyzeUserType(review.content, review.author);
+                const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
                 const editedBadge = review.edited ? '<span class="badge bg-warning text-dark ms-1">edited</span>' : '';
@@ -2173,8 +2181,11 @@
             `;
             document.getElementById('editReviewInfo').innerHTML = info;
             
-            // Display user type analysis
-            displayUserTypeAnalysis(userType, review);
+            // Set user type dropdown (use stored value or system analysis)
+            document.getElementById('editUserType').value = review.userType || userType;
+            
+            // Display user type analysis indicators
+            displayUserTypeAnalysisIndicators(userType, review);
             
             // Display keywords cloud
             displayKeywordsCloud(keywords);
@@ -2205,6 +2216,7 @@
                 source: document.getElementById('editSource').value || 'unknown',
                 author: document.getElementById('editAuthor').value || 'Anonymous',
                 rating: document.getElementById('editRating').value || null,
+                userType: document.getElementById('editUserType').value, // Include user type
                 edited: true // Mark as manually edited
             };
             
@@ -2246,20 +2258,14 @@
             }
         }
 
-        function displayUserTypeAnalysis(userType, review) {
-            const container = document.getElementById('editUserTypeDisplay');
+        function displayUserTypeAnalysisIndicators(userType, review) {
+            const container = document.getElementById('editUserTypeAnalysis');
             
-            let badgeClass = 'bg-secondary';
-            let icon = 'fas fa-question-circle';
             let confidence = 'Low';
             
             if (userType === 'premium') {
-                badgeClass = 'bg-dark';
-                icon = 'fas fa-crown';
                 confidence = 'High';
             } else if (userType === 'free') {
-                badgeClass = 'bg-light text-dark';
-                icon = 'fas fa-user';
                 confidence = 'Medium';
             }
             
@@ -2267,20 +2273,28 @@
             const indicators = getUserTypeIndicators(review.content);
             
             container.innerHTML = `
-                <div class="text-center mb-3">
-                    <span class="badge ${badgeClass} fs-6">
-                        <i class="${icon} me-2"></i>${userType.toUpperCase()}
-                    </span>
-                    <div class="mt-2">
-                        <small class="text-muted">Confidence: ${confidence}</small>
+                <div class="alert alert-light">
+                    <h6 class="mb-2">
+                        <i class="fas fa-brain me-2"></i>
+                        System Analysis
+                    </h6>
+                    <div class="mb-2">
+                        <span class="badge bg-info text-white me-2">Suggested: ${userType.toUpperCase()}</span>
+                        <span class="badge bg-secondary">Confidence: ${confidence}</span>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <h6 class="mb-2">Analysis Indicators:</h6>
-                    ${indicators.length > 0 ? 
-                        indicators.map(indicator => `<div class="mb-1"><i class="fas fa-check text-success me-2"></i><small>${indicator}</small></div>`).join('') :
-                        '<div class="text-muted"><small>No specific indicators found</small></div>'
-                    }
+                    <div class="mt-3">
+                        <h6 class="mb-2">Analysis Indicators:</h6>
+                        ${indicators.length > 0 ? 
+                            indicators.map(indicator => `<div class="mb-1"><i class="fas fa-check text-success me-2"></i><small>${indicator}</small></div>`).join('') :
+                            '<div class="text-muted"><small>No specific indicators found</small></div>'
+                        }
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            You can override the system's suggestion using the dropdown above
+                        </small>
+                    </div>
                 </div>
             `;
         }
