@@ -780,6 +780,20 @@
                     </div>
                 </div>
 
+                <!-- Pending Reviews Notification -->
+                <div id="pendingReviewsAlert" class="row mb-3" style="display: none;">
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong id="pendingReviewsCount">0</strong> reviews are waiting for review
+                            <span class="ms-2 text-muted">These reviews were skipped during upload and need manual review before being added to the system.</span>
+                            <button class="btn btn-sm btn-outline-warning ms-3" onclick="showPendingReviews()">
+                                <i class="fas fa-eye me-1"></i>Review Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Reviews Table -->
                 <div class="data-table">
                     <div class="table-responsive">
@@ -1371,6 +1385,7 @@
                         document.getElementById('fileConfig').style.display = 'block';
 
                         // Handle problematic reviews
+                        console.log('Validation result:', validation);
                         if (validation.problematicReviews.length > 0) {
                             pendingReviews = pendingReviews.concat(validation.problematicReviews);
                             showReviewModal(validation.problematicReviews, sourceName);
@@ -1803,6 +1818,7 @@
         }
 
         function showReviewModal(problematicReviews, sourceName) {
+            console.log('Showing review modal with:', problematicReviews);
             document.getElementById('reviewMessage').textContent = 
                 `${problematicReviews.length} reviews from "${sourceName}" couldn't be automatically processed and need your review.`;
             document.getElementById('pendingCount').textContent = pendingReviews.length;
@@ -1908,8 +1924,9 @@
             // Add the reviewed reviews to the main dataset
             allReviews = allReviews.concat(newValidReviews);
             
-            // Remove the reviewed items from pending
-            pendingReviews = pendingReviews.slice(reviewItems.length);
+            // Remove all pending reviews that were in this review session
+            // (they were either completed or skipped)
+            pendingReviews = [];
             
             // Update UI
             updateDashboardMetrics(allReviews);
@@ -1937,12 +1954,23 @@
             const pendingCount = pendingReviews.length;
             const indicator = document.getElementById('pendingIndicator');
             const badge = document.getElementById('pendingCountBadge');
+            const listAlert = document.getElementById('pendingReviewsAlert');
+            const listCount = document.getElementById('pendingReviewsCount');
             
             if (pendingCount > 0) {
                 indicator.style.display = 'inline';
                 badge.textContent = pendingCount;
+                listAlert.style.display = 'block';
+                listCount.textContent = pendingCount;
             } else {
                 indicator.style.display = 'none';
+                listAlert.style.display = 'none';
+            }
+        }
+
+        function showPendingReviews() {
+            if (pendingReviews.length > 0) {
+                showReviewModal(pendingReviews, 'Pending Reviews');
             }
         }
     </script>
