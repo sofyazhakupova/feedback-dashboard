@@ -1024,6 +1024,7 @@
                             <small class="text-muted">
                                 <span id="pendingCount">0</span> reviews need to be reviewed • 
                                 Fill out the required fields (date and content) and click Save, or delete reviews you don't want to include
+                                <br><strong>Column Assignment Help:</strong> If data appears in the wrong column, move it to the correct field below
                             </small>
                         </div>
                     </div>
@@ -1437,15 +1438,24 @@
                     review.hasOwnProperty(field) && review[field] && review[field].toString().trim() !== ''
                 );
 
-                if (hasRequiredFields) {
+                // Check for potential column assignment issues
+                const columnIssues = detectColumnIssues(review);
+
+                if (hasRequiredFields && columnIssues.length === 0) {
                     validReviews.push(review);
                 } else {
+                    const issues = requiredFields.filter(field => 
+                        !review.hasOwnProperty(field) || !review[field] || review[field].toString().trim() === ''
+                    );
+                    
+                    // Add column assignment issues to the main issues list
+                    const allIssues = [...issues, ...columnIssues];
+                    
                     problematicReviews.push({
                         index: index + 1, // 1-based index for user display
                         data: review,
-                        issues: requiredFields.filter(field => 
-                            !review.hasOwnProperty(field) || !review[field] || review[field].toString().trim() === ''
-                        )
+                        issues: allIssues,
+                        columnIssues: columnIssues
                     });
                 }
             });
@@ -1455,6 +1465,33 @@
                 validReviews: validReviews,
                 problematicReviews: problematicReviews
             };
+        }
+
+        function detectColumnIssues(review) {
+            const issues = [];
+            
+            // Check if content looks like it might be in the wrong column
+            const content = review.content || '';
+            const source = review.source || '';
+            const author = review.author || '';
+            const rating = review.rating || '';
+            
+            // Check if rating column contains text that looks like content
+            if (rating && rating.length > 50 && !/^\d+$/.test(rating.toString().trim())) {
+                issues.push('rating-column-might-contain-content');
+            }
+            
+            // Check if source column contains text that looks like content
+            if (source && source.length > 50 && !/^(app_store|google_play|freshdesk|google_forms|survey|unknown)$/i.test(source)) {
+                issues.push('source-column-might-contain-content');
+            }
+            
+            // Check if author column contains text that looks like content
+            if (author && author.length > 50 && !/^[a-zA-Z\s]+$/.test(author)) {
+                issues.push('author-column-might-contain-content');
+            }
+            
+            return issues;
         }
 
         function analyzeUserType(message, author) {
@@ -1835,23 +1872,32 @@
                             <i class="fas fa-file-alt me-2"></i>
                             Review ${index + 1} (Row ${review.index})
                         </h6>
-                        <small class="text-muted">Issues: ${review.issues.join(', ')}</small>
+                        <small class="text-muted">
+                            ${review.issues.includes('date') ? 'Missing date • ' : ''}
+                            ${review.issues.includes('content') ? 'Missing content • ' : ''}
+                            ${review.columnIssues && review.columnIssues.includes('rating-column-might-contain-content') ? 'Rating column might contain message content • ' : ''}
+                            ${review.columnIssues && review.columnIssues.includes('source-column-might-contain-content') ? 'Source column might contain message content • ' : ''}
+                            ${review.columnIssues && review.columnIssues.includes('author-column-might-contain-content') ? 'Author column might contain message content • ' : ''}
+                        </small>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <label class="form-label">Date <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="date_${index}" value="${review.data.date || ''}">
+                                <small class="text-muted">Required: When the review was written</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Source</label>
                                 <input type="text" class="form-control" id="source_${index}" value="${review.data.source || ''}" placeholder="e.g., app_store, google_play">
+                                <small class="text-muted">Where the review came from (app store, support, etc.)</small>
                             </div>
                         </div>
                         <div class="row mt-2">
                             <div class="col-md-6">
                                 <label class="form-label">Author/User Name</label>
                                 <input type="text" class="form-control" id="author_${index}" value="${review.data.author || ''}" placeholder="User name or Anonymous">
+                                <small class="text-muted">Name of the person who wrote the review</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Rating</label>
@@ -1863,12 +1909,14 @@
                                     <option value="4" ${review.data.rating == 4 ? 'selected' : ''}>4 stars</option>
                                     <option value="5" ${review.data.rating == 5 ? 'selected' : ''}>5 stars</option>
                                 </select>
+                                <small class="text-muted">Star rating (1-5) - should be a number only</small>
                             </div>
                         </div>
                         <div class="row mt-2">
                             <div class="col-12">
                                 <label class="form-label">Message/Content <span class="text-danger">*</span></label>
                                 <textarea class="form-control" id="content_${index}" rows="3" placeholder="Review content...">${review.data.content || ''}</textarea>
+                                <small class="text-muted">Required: The actual review text or comment</small>
                             </div>
                         </div>
                         <div class="row mt-2">
