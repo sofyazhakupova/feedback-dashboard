@@ -342,26 +342,31 @@
 
         /* Modal */
         .modal-content {
-            border-radius: 0;
-            border: 1px solid var(--primary-black);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid var(--github-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
         }
 
         .modal-header {
-            background: var(--primary-black);
-            color: var(--primary-white);
-            border-radius: 0;
-            border-bottom: 1px solid var(--primary-black);
+            background: var(--github-bg-secondary);
+            color: var(--github-text);
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid var(--github-border);
         }
 
         .modal-header h5 {
-            font-weight: 400;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-weight: 600;
+            font-size: 16px;
         }
 
         .btn-close-white {
-            filter: invert(1);
+            filter: none;
+        }
+
+        .alert-warning {
+            background-color: #fff8c5;
+            border-color: #f0cc00;
+            color: #9a6700;
         }
 
         /* Pagination */
@@ -454,6 +459,12 @@
                         <p class="header-subtitle">
                             <i class="fas fa-sync-alt live-indicator me-2"></i>
                             Real-time insights from app stores, support tickets, and surveys
+                            <span id="pendingIndicator" class="ms-3" style="display: none;">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <span id="pendingCountBadge">0</span> reviews need review
+                                </span>
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -738,11 +749,8 @@
                             </div>
                         </div>
                         <div class="col-md-6 mb-3 d-flex align-items-end">
-                            <button class="btn btn-primary me-2" onclick="applyFilters()">
-                                <i class="fas fa-filter me-2"></i>Apply Filters
-                            </button>
                             <button class="btn btn-outline-secondary" onclick="clearFilters()">
-                                <i class="fas fa-times me-2"></i>Clear
+                                <i class="fas fa-times me-2"></i>Clear All Filters
                             </button>
                         </div>
                     </div>
@@ -983,11 +991,52 @@
         </div>
     </div>
 
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Data Review Required
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="reviewMessage">Some reviews couldn't be automatically processed and need your review.</span>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <span id="pendingCount">0</span> reviews need to be reviewed • 
+                                You can skip this step and review them later
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div id="reviewContainer">
+                        <!-- Review items will be dynamically added here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" onclick="skipReview()">
+                        <i class="fas fa-clock me-2"></i>Review Later
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="completeReview()">
+                        <i class="fas fa-check me-2"></i>Complete Review
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Global data storage
         let allReviews = [];
         let dataSources = [];
+        let pendingReviews = []; // Reviews that need manual review
+        let reviewedReviews = []; // Reviews that have been manually edited
 
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
@@ -1037,6 +1086,14 @@
                     document.getElementById('sourceName').value = fileName.replace(/\.[^/.]+$/, "");
                 }
             });
+
+            // Auto-applying filters
+            document.getElementById('sourceFilter').addEventListener('change', applyFilters);
+            document.getElementById('userTypeFilter').addEventListener('change', applyFilters);
+            document.getElementById('ratingFilter').addEventListener('change', applyFilters);
+            document.getElementById('keywordSearch').addEventListener('input', applyFilters);
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
         }
 
         function updateDashboardForPeriod(days) {
@@ -1278,23 +1335,24 @@
                         }
 
                         // Validate data structure
-                        if (!validateDataStructure(data)) {
-                            alert('Invalid data structure. Please ensure your file has the required columns: date, source, content');
+                        const validation = validateDataStructure(data);
+                        if (!validation.valid) {
+                            alert('No valid reviews found. Please ensure your file has the required columns: date, content');
                             return;
                         }
 
-                        // Add to data sources
+                        // Add valid reviews to data sources
                         const newSource = {
                             id: Date.now(),
                             name: sourceName,
                             type: sourceType,
                             description: description,
-                            data: data,
+                            data: validation.validReviews,
                             createdAt: new Date().toISOString()
                         };
 
                         dataSources.push(newSource);
-                        allReviews = allReviews.concat(data);
+                        allReviews = allReviews.concat(validation.validReviews);
 
                         // Update UI
                         updateSourceCount();
@@ -1312,7 +1370,13 @@
                         document.getElementById('apiConfig').style.display = 'none';
                         document.getElementById('fileConfig').style.display = 'block';
 
-                        alert(`Successfully loaded ${data.length} reviews from ${sourceName}`);
+                        // Handle problematic reviews
+                        if (validation.problematicReviews.length > 0) {
+                            pendingReviews = pendingReviews.concat(validation.problematicReviews);
+                            showReviewModal(validation.problematicReviews, sourceName);
+                        } else {
+                            alert(`✅ Successfully loaded ${validation.validReviews.length} reviews from "${sourceName}". All reviews were automatically processed.`);
+                        }
 
                     } catch (error) {
                         alert('Error parsing file: ' + error.message);
@@ -1346,13 +1410,36 @@
 
         function validateDataStructure(data) {
             if (!Array.isArray(data) || data.length === 0) {
-                return false;
+                return { valid: false, validReviews: [], problematicReviews: [] };
             }
 
             const requiredFields = ['date', 'content']; // Only date and content are required
-            const firstRow = data[0];
-            
-            return requiredFields.every(field => firstRow.hasOwnProperty(field));
+            const validReviews = [];
+            const problematicReviews = [];
+
+            data.forEach((review, index) => {
+                const hasRequiredFields = requiredFields.every(field => 
+                    review.hasOwnProperty(field) && review[field] && review[field].toString().trim() !== ''
+                );
+
+                if (hasRequiredFields) {
+                    validReviews.push(review);
+                } else {
+                    problematicReviews.push({
+                        index: index + 1, // 1-based index for user display
+                        data: review,
+                        issues: requiredFields.filter(field => 
+                            !review.hasOwnProperty(field) || !review[field] || review[field].toString().trim() === ''
+                        )
+                    });
+                }
+            });
+
+            return {
+                valid: validReviews.length > 0,
+                validReviews: validReviews,
+                problematicReviews: problematicReviews
+            };
         }
 
         function analyzeUserType(message, author) {
@@ -1563,6 +1650,7 @@
                 const userType = analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
+                const editedBadge = review.edited ? '<span class="badge bg-warning text-dark ms-1">edited</span>' : '';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -1570,7 +1658,7 @@
                     <td><span class="badge badge-source">${review.source || 'Unknown'}</span></td>
                     <td>${review.author || 'Anonymous'}</td>
                     <td><span class="badge ${userType === 'premium' ? 'bg-dark' : userType === 'free' ? 'bg-light text-dark' : 'bg-secondary'}">${userType}</span></td>
-                    <td>${(review.content || '').substring(0, 150)}${(review.content || '').length > 150 ? '...' : ''}</td>
+                    <td>${(review.content || '').substring(0, 150)}${(review.content || '').length > 150 ? '...' : ''}${editedBadge}</td>
                     <td>${extractedRating ? generateStars(extractedRating) : 'N/A'}</td>
                     <td>${keywords.length > 0 ? keywords.slice(0, 3).map(k => `<span class="badge bg-light text-dark me-1">${k}</span>`).join('') : 'None'}</td>
                     <td>
@@ -1644,6 +1732,7 @@
                 const userType = analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
+                const editedBadge = review.edited ? '<span class="badge bg-warning text-dark ms-1">edited</span>' : '';
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -1651,7 +1740,7 @@
                     <td><span class="badge badge-source">${review.source || 'Unknown'}</span></td>
                     <td>${review.author || 'Anonymous'}</td>
                     <td><span class="badge ${userType === 'premium' ? 'bg-dark' : userType === 'free' ? 'bg-light text-dark' : 'bg-secondary'}">${userType}</span></td>
-                    <td>${(review.content || '').substring(0, 150)}${(review.content || '').length > 150 ? '...' : ''}</td>
+                    <td>${(review.content || '').substring(0, 150)}${(review.content || '').length > 150 ? '...' : ''}${editedBadge}</td>
                     <td>${extractedRating ? generateStars(extractedRating) : 'N/A'}</td>
                     <td>${keywords.length > 0 ? keywords.slice(0, 3).map(k => `<span class="badge bg-light text-dark me-1">${k}</span>`).join('') : 'None'}</td>
                     <td>
@@ -1711,6 +1800,150 @@
         function updateTime() {
             const now = new Date();
             document.getElementById('last-updated').textContent = now.toLocaleString();
+        }
+
+        function showReviewModal(problematicReviews, sourceName) {
+            document.getElementById('reviewMessage').textContent = 
+                `${problematicReviews.length} reviews from "${sourceName}" couldn't be automatically processed and need your review.`;
+            document.getElementById('pendingCount').textContent = pendingReviews.length;
+            
+            const container = document.getElementById('reviewContainer');
+            container.innerHTML = '';
+            
+            problematicReviews.forEach((review, index) => {
+                const reviewItem = document.createElement('div');
+                reviewItem.className = 'card mb-3';
+                reviewItem.innerHTML = `
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Review ${index + 1} (Row ${review.index})
+                        </h6>
+                        <small class="text-muted">Issues: ${review.issues.join(', ')}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="date_${index}" value="${review.data.date || ''}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Source</label>
+                                <input type="text" class="form-control" id="source_${index}" value="${review.data.source || ''}" placeholder="e.g., app_store, google_play">
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Author/User Name</label>
+                                <input type="text" class="form-control" id="author_${index}" value="${review.data.author || ''}" placeholder="User name or Anonymous">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rating</label>
+                                <select class="form-select" id="rating_${index}">
+                                    <option value="">No rating</option>
+                                    <option value="1" ${review.data.rating == 1 ? 'selected' : ''}>1 star</option>
+                                    <option value="2" ${review.data.rating == 2 ? 'selected' : ''}>2 stars</option>
+                                    <option value="3" ${review.data.rating == 3 ? 'selected' : ''}>3 stars</option>
+                                    <option value="4" ${review.data.rating == 4 ? 'selected' : ''}>4 stars</option>
+                                    <option value="5" ${review.data.rating == 5 ? 'selected' : ''}>5 stars</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <label class="form-label">Message/Content <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="content_${index}" rows="3" placeholder="Review content...">${review.data.content || ''}</textarea>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeReview(${index})">
+                                    <i class="fas fa-trash me-1"></i>Remove Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(reviewItem);
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            modal.show();
+        }
+
+        function skipReview() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+            modal.hide();
+            
+            // Update pending count display
+            updatePendingCount();
+            
+            alert(`⏰ Review skipped. ${pendingReviews.length} reviews are pending review and can be reviewed later. You'll see a notification in the header when reviews need attention.`);
+        }
+
+        function completeReview() {
+            const container = document.getElementById('reviewContainer');
+            const reviewItems = container.querySelectorAll('.card');
+            const newValidReviews = [];
+            
+            reviewItems.forEach((item, index) => {
+                const date = document.getElementById(`date_${index}`).value;
+                const content = document.getElementById(`content_${index}`).value;
+                
+                if (date && content.trim()) {
+                    const review = {
+                        date: date,
+                        content: content.trim(),
+                        source: document.getElementById(`source_${index}`).value || 'unknown',
+                        author: document.getElementById(`author_${index}`).value || 'Anonymous',
+                        rating: document.getElementById(`rating_${index}`).value || null,
+                        edited: true // Mark as manually edited
+                    };
+                    
+                    newValidReviews.push(review);
+                    reviewedReviews.push(review);
+                }
+            });
+            
+            // Add the reviewed reviews to the main dataset
+            allReviews = allReviews.concat(newValidReviews);
+            
+            // Remove the reviewed items from pending
+            pendingReviews = pendingReviews.slice(reviewItems.length);
+            
+            // Update UI
+            updateDashboardMetrics(allReviews);
+            updateReviewsTable();
+            updateSourceFilter();
+            updatePendingCount();
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+            modal.hide();
+            
+            alert(`✅ Successfully reviewed and added ${newValidReviews.length} reviews to the system. These reviews are now marked as "edited" in the table.`);
+        }
+
+        function removeReview(index) {
+            if (confirm('Are you sure you want to remove this review?')) {
+                const container = document.getElementById('reviewContainer');
+                const reviewItems = container.querySelectorAll('.card');
+                if (reviewItems[index]) {
+                    reviewItems[index].remove();
+                }
+            }
+        }
+
+        function updatePendingCount() {
+            const pendingCount = pendingReviews.length;
+            const indicator = document.getElementById('pendingIndicator');
+            const badge = document.getElementById('pendingCountBadge');
+            
+            if (pendingCount > 0) {
+                indicator.style.display = 'inline';
+                badge.textContent = pendingCount;
+            } else {
+                indicator.style.display = 'none';
+            }
         }
     </script>
 </body>
