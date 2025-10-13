@@ -1168,10 +1168,78 @@
         let pendingReviews = []; // Reviews that need manual review
         let reviewedReviews = []; // Reviews that have been manually edited
 
+        // Initialize data from localStorage on page load
+        function initializeFromStorage() {
+            // Load all reviews
+            const savedReviews = localStorage.getItem('appReviewScraper_reviews');
+            if (savedReviews) {
+                allReviews = JSON.parse(savedReviews);
+            }
+
+            // Load data sources
+            const savedSources = localStorage.getItem('appReviewScraper_sources');
+            if (savedSources) {
+                dataSources = JSON.parse(savedSources);
+            }
+
+            // Load pending reviews
+            const savedPending = localStorage.getItem('appReviewScraper_pending');
+            if (savedPending) {
+                pendingReviews = JSON.parse(savedPending);
+            }
+
+            // Load reviewed reviews
+            const savedReviewed = localStorage.getItem('appReviewScraper_reviewed');
+            if (savedReviewed) {
+                reviewedReviews = JSON.parse(savedReviewed);
+            }
+
+            // Update UI with loaded data
+            updateDashboardMetrics(allReviews);
+            updateReviewsTable();
+            updateSourceFilter();
+            updatePendingCount();
+            updateDataSourcesTable();
+        }
+
+        // Save data to localStorage
+        function saveToStorage() {
+            localStorage.setItem('appReviewScraper_reviews', JSON.stringify(allReviews));
+            localStorage.setItem('appReviewScraper_sources', JSON.stringify(dataSources));
+            localStorage.setItem('appReviewScraper_pending', JSON.stringify(pendingReviews));
+            localStorage.setItem('appReviewScraper_reviewed', JSON.stringify(reviewedReviews));
+        }
+
+        // Clear all stored data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This will remove all reviews, sources, and settings. This action cannot be undone.')) {
+                allReviews = [];
+                dataSources = [];
+                pendingReviews = [];
+                reviewedReviews = [];
+                
+                // Clear localStorage
+                localStorage.removeItem('appReviewScraper_reviews');
+                localStorage.removeItem('appReviewScraper_sources');
+                localStorage.removeItem('appReviewScraper_pending');
+                localStorage.removeItem('appReviewScraper_reviewed');
+                
+                // Update UI
+                updateDashboardMetrics(allReviews);
+                updateReviewsTable();
+                updateSourceFilter();
+                updatePendingCount();
+                updateDataSourcesTable();
+                
+                alert('✅ All data has been cleared successfully!');
+            }
+        }
+
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             updateTime();
+            initializeFromStorage(); // Load saved data
             setInterval(updateTime, 60000);
             updateSourceCount();
         });
@@ -1483,6 +1551,9 @@
 
                         dataSources.push(newSource);
                         allReviews = allReviews.concat(validation.validReviews);
+
+                        // Save to localStorage
+                        saveToStorage();
 
                         // Update UI
                         updateSourceCount();
@@ -2056,6 +2127,7 @@
             
             // Remove all pending reviews from this session (they were explicitly skipped)
             pendingReviews = [];
+            saveToStorage();
             updatePendingCount();
             
             alert(`⏰ All reviews skipped. No reviews were added to the system.`);
@@ -2095,6 +2167,9 @@
             
             // Update pending reviews - remove the ones that were in this modal, add back the incomplete ones
             pendingReviews = pendingReviews.slice(totalInModal).concat(remainingPendingReviews);
+            
+            // Save to localStorage
+            saveToStorage();
             
             // Update UI
             updateDashboardMetrics(allReviews);
