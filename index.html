@@ -529,62 +529,131 @@
                     </div>
                 </div>
 
-                <!-- Overview Cards -->
-                <div class="row mb-5">
+                <!-- Top Metrics Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-star fa-2x mb-3" style="color: var(--primary-black);"></i>
+                                <h4 class="card-title">Avg Rating (Total)</h4>
+                                <h2 id="total-avg-rating">0.0</h2>
+                                <small style="color: var(--medium-gray);" id="total-rating-change">No change</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fab fa-google-play fa-2x mb-3" style="color: var(--primary-black);"></i>
+                                <h4 class="card-title">Google Play Avg</h4>
+                                <h2 id="playstore-avg-rating">0.0</h2>
+                                <small style="color: var(--medium-gray);" id="playstore-rating-change">No change</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card metric-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fab fa-apple fa-2x mb-3" style="color: var(--primary-black);"></i>
+                                <h4 class="card-title">Apple Store Avg</h4>
+                                <h2 id="appstore-avg-rating">0.0</h2>
+                                <small style="color: var(--medium-gray);" id="appstore-rating-change">No change</small>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-lg-3 col-md-6 mb-4">
                         <div class="card metric-card h-100">
                             <div class="card-body text-center">
                                 <i class="fas fa-comments fa-2x mb-3" style="color: var(--primary-black);"></i>
                                 <h4 class="card-title">Total Reviews</h4>
                                 <h2 id="total-reviews">0</h2>
-                                <small style="color: var(--medium-gray);">No data loaded</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card metric-card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-star fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Avg Rating</h4>
-                                <h2 id="avg-rating">N/A</h2>
-                                <small style="color: var(--medium-gray);">No data loaded</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card metric-card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-smile fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Positive Sentiment</h4>
-                                <h2 id="positive-sentiment">N/A</h2>
-                                <small style="color: var(--medium-gray);">No data loaded</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card metric-card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-database fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Data Sources</h4>
-                                <h2 id="sources-count">0</h2>
-                                <small style="color: var(--medium-gray);">No sources added</small>
+                                <small style="color: var(--medium-gray);" id="reviews-change">No change</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Charts Row -->
-                <div class="row mb-5">
-                    <div class="col-lg-6 mb-4">
-                        <div class="card chart-card h-100">
-                            <div class="chart-header">
+                <!-- Most Frequent Keywords Cloud -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
                                 <h5 class="mb-0">
-                                    <i class="fas fa-pie-chart me-2"></i>
-                                    Sentiment Distribution
+                                    <i class="fas fa-tags me-2"></i>
+                                    Most Frequent Keywords
+                                </h5>
+                                <small class="text-muted" id="keywords-period-change">Compared to previous period</small>
+                            </div>
+                            <div class="card-body">
+                                <div id="keywordsCloud" class="text-center">
+                                    <p class="text-muted">No keywords available</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Lists Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2" style="color: #dc3545;"></i>
+                                    Pain Points (Top 10)
                                 </h5>
                             </div>
-                            <div class="card-body p-4">
-                                <div id="sentiment-chart" style="height: 350px;">
+                            <div class="card-body">
+                                <div id="painPointsList">
+                                    <p class="text-muted">No pain points identified</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-thumbs-up me-2" style="color: #28a745;"></i>
+                                    Advantages (Top 10)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="advantagesList">
+                                    <p class="text-muted">No advantages identified</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-lightbulb me-2" style="color: #ffc107;"></i>
+                                    Requested Features (Top 10)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="requestedFeaturesList">
+                                    <p class="text-muted">No feature requests identified</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pie Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card chart-card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Pain Points Distribution
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="painPointsChart" style="height: 350px;">
                                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
                                         <div class="text-center">
                                             <i class="fas fa-chart-pie fa-3x mb-3"></i>
@@ -597,18 +666,56 @@
                     </div>
                     <div class="col-lg-6 mb-4">
                         <div class="card chart-card h-100">
-                            <div class="chart-header">
+                            <div class="card-header">
                                 <h5 class="mb-0">
-                                    <i class="fas fa-mobile-alt me-2"></i>
-                                    Source Distribution
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Requested Features Distribution
                                 </h5>
                             </div>
-                            <div class="card-body p-4">
-                                <div id="source-chart" style="height: 350px;">
+                            <div class="card-body">
+                                <div id="requestedFeaturesChart" style="height: 350px;">
                                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
                                         <div class="text-center">
-                                            <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
                                             <p>No data available</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keyword Trends Chart -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            Keyword Trends
+                                        </h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select form-select-sm" id="keywordSelector" multiple>
+                                                <option value="">Select keywords...</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="updateKeywordTrends()">
+                                                Update Chart
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="keywordTrendsChart" style="height: 400px;">
+                                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                                        <div class="text-center">
+                                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                            <p>Select keywords to see trends</p>
                                         </div>
                                     </div>
                                 </div>
@@ -836,6 +943,9 @@
                     <div class="col-md-4 text-end">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSourceModal">
                             <i class="fas fa-plus me-2"></i>Add New Source
+                        </button>
+                        <button class="btn btn-outline-danger ms-2" onclick="clearAllData()">
+                            <i class="fas fa-trash me-2"></i>Clear All Data
                         </button>
                     </div>
                 </div>
@@ -1199,7 +1309,8 @@
             updateReviewsTable();
             updateSourceFilter();
             updatePendingCount();
-            updateDataSourcesTable();
+            updateSourceList();
+            updateSourceCount();
         }
 
         // Save data to localStorage
@@ -1229,7 +1340,8 @@
                 updateReviewsTable();
                 updateSourceFilter();
                 updatePendingCount();
-                updateDataSourcesTable();
+                updateSourceList();
+                updateSourceCount();
                 
                 alert('✅ All data has been cleared successfully!');
             }
@@ -1353,30 +1465,318 @@
         function updateDashboardMetrics(reviews) {
             if (reviews.length === 0) {
                 document.getElementById('total-reviews').textContent = '0';
-                document.getElementById('avg-rating').textContent = 'N/A';
-                document.getElementById('positive-sentiment').textContent = 'N/A';
+                document.getElementById('total-avg-rating').textContent = '0.0';
+                document.getElementById('playstore-avg-rating').textContent = '0.0';
+                document.getElementById('appstore-avg-rating').textContent = '0.0';
                 return;
             }
 
             // Update total reviews
             document.getElementById('total-reviews').textContent = reviews.length.toLocaleString();
 
-            // Calculate average rating
+            // Calculate total average rating
             const reviewsWithRating = reviews.filter(r => r.rating && !isNaN(r.rating));
             if (reviewsWithRating.length > 0) {
                 const avgRating = reviewsWithRating.reduce((sum, r) => sum + r.rating, 0) / reviewsWithRating.length;
-                document.getElementById('avg-rating').textContent = avgRating.toFixed(1);
+                document.getElementById('total-avg-rating').textContent = avgRating.toFixed(1);
             } else {
-                document.getElementById('avg-rating').textContent = 'N/A';
+                document.getElementById('total-avg-rating').textContent = '0.0';
             }
 
-            // Calculate positive sentiment percentage
-            const positiveReviews = reviews.filter(r => r.sentiment === 'positive');
-            const positivePercentage = (positiveReviews.length / reviews.length) * 100;
-            document.getElementById('positive-sentiment').textContent = positivePercentage.toFixed(1) + '%';
+            // Calculate Play Store average
+            const playStoreReviews = reviews.filter(r => r.source === 'google_play');
+            const playStoreWithRating = playStoreReviews.filter(r => r.rating && !isNaN(r.rating));
+            if (playStoreWithRating.length > 0) {
+                const playStoreAvg = playStoreWithRating.reduce((sum, r) => sum + r.rating, 0) / playStoreWithRating.length;
+                document.getElementById('playstore-avg-rating').textContent = playStoreAvg.toFixed(1);
+            } else {
+                document.getElementById('playstore-avg-rating').textContent = '0.0';
+            }
 
+            // Calculate Apple Store average
+            const appStoreReviews = reviews.filter(r => r.source === 'app_store');
+            const appStoreWithRating = appStoreReviews.filter(r => r.rating && !isNaN(r.rating));
+            if (appStoreWithRating.length > 0) {
+                const appStoreAvg = appStoreWithRating.reduce((sum, r) => sum + r.rating, 0) / appStoreWithRating.length;
+                document.getElementById('appstore-avg-rating').textContent = appStoreAvg.toFixed(1);
+            } else {
+                document.getElementById('appstore-avg-rating').textContent = '0.0';
+            }
+
+            // Update advanced analytics
+            updateAdvancedAnalytics(reviews);
+        }
+
+        function updateAdvancedAnalytics(reviews) {
+            // Update keyword cloud
+            updateKeywordsCloud(reviews);
+            
+            // Update lists
+            updatePainPointsList(reviews);
+            updateAdvantagesList(reviews);
+            updateRequestedFeaturesList(reviews);
+            
             // Update charts
-            updateCharts(reviews);
+            updatePainPointsChart(reviews);
+            updateRequestedFeaturesChart(reviews);
+            
+            // Update keyword selector
+            updateKeywordSelector(reviews);
+        }
+
+        function updateKeywordsCloud(reviews) {
+            const keywords = extractAllKeywords(reviews);
+            const container = document.getElementById('keywordsCloud');
+            
+            if (Object.keys(keywords).length === 0) {
+                container.innerHTML = '<p class="text-muted">No keywords available</p>';
+                return;
+            }
+            
+            // Sort by frequency and take top 20
+            const sortedKeywords = Object.entries(keywords)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 20);
+            
+            const keywordCloud = sortedKeywords.map(([keyword, count], index) => {
+                let sizeClass = 'fs-7';
+                let badgeClass = 'bg-light text-dark';
+                
+                // Different sizes for visual hierarchy
+                if (index < 3) {
+                    sizeClass = 'fs-5';
+                    badgeClass = 'bg-primary text-white';
+                } else if (index < 6) {
+                    sizeClass = 'fs-6';
+                    badgeClass = 'bg-info text-white';
+                } else if (index < 10) {
+                    sizeClass = 'fs-6';
+                    badgeClass = 'bg-light text-dark';
+                }
+                
+                return `<span class="badge ${badgeClass} me-1 mb-1 ${sizeClass}" title="${count} mentions">${keyword}</span>`;
+            }).join('');
+            
+            container.innerHTML = keywordCloud;
+        }
+
+        function updatePainPointsList(reviews) {
+            const painPoints = extractPainPoints(reviews);
+            const container = document.getElementById('painPointsList');
+            
+            if (painPoints.length === 0) {
+                container.innerHTML = '<p class="text-muted">No pain points identified</p>';
+                return;
+            }
+            
+            const list = painPoints.slice(0, 10).map((item, index) => `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="me-2">${index + 1}.</span>
+                    <span class="flex-grow-1">${item.text}</span>
+                    <span class="badge bg-danger">${item.count}</span>
+                </div>
+            `).join('');
+            
+            container.innerHTML = list;
+        }
+
+        function updateAdvantagesList(reviews) {
+            const advantages = extractAdvantages(reviews);
+            const container = document.getElementById('advantagesList');
+            
+            if (advantages.length === 0) {
+                container.innerHTML = '<p class="text-muted">No advantages identified</p>';
+                return;
+            }
+            
+            const list = advantages.slice(0, 10).map((item, index) => `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="me-2">${index + 1}.</span>
+                    <span class="flex-grow-1">${item.text}</span>
+                    <span class="badge bg-success">${item.count}</span>
+                </div>
+            `).join('');
+            
+            container.innerHTML = list;
+        }
+
+        function updateRequestedFeaturesList(reviews) {
+            const features = extractRequestedFeatures(reviews);
+            const container = document.getElementById('requestedFeaturesList');
+            
+            if (features.length === 0) {
+                container.innerHTML = '<p class="text-muted">No feature requests identified</p>';
+                return;
+            }
+            
+            const list = features.slice(0, 10).map((item, index) => `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="me-2">${index + 1}.</span>
+                    <span class="flex-grow-1">${item.text}</span>
+                    <span class="badge bg-warning text-dark">${item.count}</span>
+                </div>
+            `).join('');
+            
+            container.innerHTML = list;
+        }
+
+        function updatePainPointsChart(reviews) {
+            const painPoints = extractPainPoints(reviews);
+            const container = document.getElementById('painPointsChart');
+            
+            if (painPoints.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <p>No pain points data available</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create pie chart using Plotly
+            const data = [{
+                values: painPoints.slice(0, 8).map(p => p.count),
+                labels: painPoints.slice(0, 8).map(p => p.text),
+                type: 'pie',
+                textinfo: 'label+percent',
+                textposition: 'outside',
+                marker: {
+                    colors: ['#ff6b6b', '#ff8e53', '#ff6b9d', '#c44569', '#f8b500', '#ff9ff3', '#54a0ff', '#5f27cd']
+                }
+            }];
+            
+            const layout = {
+                margin: { t: 0, b: 0, l: 0, r: 0 },
+                showlegend: true,
+                legend: {
+                    orientation: "v",
+                    x: 1.02,
+                    y: 1
+                },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: {
+                    color: '#24292f'
+                }
+            };
+            
+            Plotly.newPlot(container, data, layout, {responsive: true});
+        }
+
+        function updateRequestedFeaturesChart(reviews) {
+            const features = extractRequestedFeatures(reviews);
+            const container = document.getElementById('requestedFeaturesChart');
+            
+            if (features.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <p>No feature requests data available</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create pie chart using Plotly
+            const data = [{
+                values: features.slice(0, 8).map(f => f.count),
+                labels: features.slice(0, 8).map(f => f.text),
+                type: 'pie',
+                textinfo: 'label+percent',
+                textposition: 'outside',
+                marker: {
+                    colors: ['#ffd93d', '#6bcf7f', '#4d9de0', '#e15554', '#e1bc29', '#3bb273', '#7768ae', '#f7b2ad']
+                }
+            }];
+            
+            const layout = {
+                margin: { t: 0, b: 0, l: 0, r: 0 },
+                showlegend: true,
+                legend: {
+                    orientation: "v",
+                    x: 1.02,
+                    y: 1
+                },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: {
+                    color: '#24292f'
+                }
+            };
+            
+            Plotly.newPlot(container, data, layout, {responsive: true});
+        }
+
+        function updateKeywordSelector(reviews) {
+            const keywords = extractAllKeywords(reviews);
+            const selector = document.getElementById('keywordSelector');
+            
+            // Clear existing options except the first one
+            selector.innerHTML = '<option value="">Select keywords...</option>';
+            
+            // Add top 20 keywords as options
+            const sortedKeywords = Object.entries(keywords)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 20);
+            
+            sortedKeywords.forEach(([keyword, count]) => {
+                const option = document.createElement('option');
+                option.value = keyword;
+                option.textContent = `${keyword} (${count})`;
+                selector.appendChild(option);
+            });
+        }
+
+        function updateKeywordTrends() {
+            const selector = document.getElementById('keywordSelector');
+            const selectedKeywords = Array.from(selector.selectedOptions).map(option => option.value);
+            const container = document.getElementById('keywordTrendsChart');
+            
+            if (selectedKeywords.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>Please select keywords to see trends</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get filtered reviews based on selected period
+            const filteredReviews = getFilteredReviewsByPeriod(allReviews);
+            const trendData = calculateKeywordTrends(filteredReviews, selectedKeywords);
+            
+            // Create line chart
+            const data = selectedKeywords.map((keyword, index) => ({
+                x: trendData.weeks,
+                y: trendData[keyword] || [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: keyword,
+                line: {
+                    color: ['#ff6b6b', '#4d9de0', '#6bcf7f', '#ffd93d', '#e15554'][index % 5]
+                }
+            }));
+            
+            const layout = {
+                title: 'Keyword Mention Trends (Weekly)',
+                xaxis: { title: 'Week' },
+                yaxis: { title: 'Number of Mentions' },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: {
+                    color: '#24292f'
+                }
+            };
+            
+            Plotly.newPlot(container, data, layout, {responsive: true});
         }
 
         function updateCharts(reviews) {
@@ -2015,6 +2415,9 @@
                     // Remove reviews from this source
                     allReviews = allReviews.filter(r => !source.data.includes(r));
                     
+                    // Save to localStorage
+                    saveToStorage();
+                    
                     // Update UI
                     updateSourceCount();
                     updateSourceList();
@@ -2451,6 +2854,181 @@
                     </small>
                 </div>
             `;
+        }
+
+        // Advanced Analytics Helper Functions
+        function extractAllKeywords(reviews) {
+            const keywordCounts = {};
+            
+            reviews.forEach(review => {
+                const keywords = extractKeywords(review.content);
+                keywords.forEach(keyword => {
+                    keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+                });
+            });
+            
+            return keywordCounts;
+        }
+
+        function extractPainPoints(reviews) {
+            const painPointPatterns = [
+                /(?:bug|bugs|broken|crash|crashes|error|errors|issue|issues|problem|problems|slow|slowly|lag|laggy|freeze|freezes|glitch|glitches)/gi,
+                /(?:difficult|hard|confusing|complicated|complex|frustrating|annoying|terrible|awful|horrible)/gi,
+                /(?:missing|lack|need|want|wish|should|could|better|improve|fix)/gi,
+                /(?:expensive|cost|price|money|waste|worthless|useless|bad|worst)/gi,
+                /(?:support|customer service|help|response|reply)/gi
+            ];
+            
+            const painPoints = {};
+            
+            reviews.forEach(review => {
+                const content = review.content.toLowerCase();
+                const rating = review.rating || 0;
+                
+                // Only consider reviews with low ratings or negative sentiment
+                if (rating <= 2 || content.includes('bad') || content.includes('terrible') || content.includes('awful')) {
+                    painPointPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const cleanMatch = match.toLowerCase().trim();
+                                if (cleanMatch.length > 2) {
+                                    painPoints[cleanMatch] = (painPoints[cleanMatch] || 0) + 1;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return Object.entries(painPoints)
+                .map(([text, count]) => ({ text, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function extractAdvantages(reviews) {
+            const advantagePatterns = [
+                /(?:great|good|excellent|amazing|awesome|fantastic|perfect|wonderful|brilliant|outstanding)/gi,
+                /(?:love|like|enjoy|recommend|best|favorite|top|superior|quality|reliable)/gi,
+                /(?:fast|quick|easy|simple|intuitive|user-friendly|smooth|stable|secure|safe)/gi,
+                /(?:feature|features|function|functions|tool|tools|option|options|capability|capabilities)/gi,
+                /(?:free|cheap|affordable|value|worth|benefit|benefits|advantage|advantages)/gi
+            ];
+            
+            const advantages = {};
+            
+            reviews.forEach(review => {
+                const content = review.content.toLowerCase();
+                const rating = review.rating || 0;
+                
+                // Only consider reviews with high ratings or positive sentiment
+                if (rating >= 4 || content.includes('great') || content.includes('excellent') || content.includes('love')) {
+                    advantagePatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const cleanMatch = match.toLowerCase().trim();
+                                if (cleanMatch.length > 2) {
+                                    advantages[cleanMatch] = (advantages[cleanMatch] || 0) + 1;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return Object.entries(advantages)
+                .map(([text, count]) => ({ text, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function extractRequestedFeatures(reviews) {
+            const featurePatterns = [
+                /(?:add|need|want|wish|should|could|please|feature|function|option)/gi,
+                /(?:support|compatibility|integration|sync|backup|export|import)/gi,
+                /(?:notification|alert|reminder|calendar|schedule|timer)/gi,
+                /(?:theme|color|design|layout|interface|ui|ux)/gi,
+                /(?:language|translation|localization|region|country)/gi,
+                /(?:dark mode|night mode|light mode|theme|appearance)/gi,
+                /(?:offline|online|sync|cloud|storage|backup)/gi,
+                /(?:widget|shortcut|gesture|voice|command|automation)/gi
+            ];
+            
+            const features = {};
+            
+            reviews.forEach(review => {
+                const content = review.content.toLowerCase();
+                
+                featurePatterns.forEach(pattern => {
+                    const matches = content.match(pattern);
+                    if (matches) {
+                        matches.forEach(match => {
+                            const cleanMatch = match.toLowerCase().trim();
+                            if (cleanMatch.length > 2) {
+                                features[cleanMatch] = (features[cleanMatch] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            return Object.entries(features)
+                .map(([text, count]) => ({ text, count }))
+                .sort((a, b) => b.count - a.count);
+        }
+
+        function getFilteredReviewsByPeriod(reviews) {
+            // This would filter reviews based on the selected time period
+            // For now, return all reviews
+            return reviews;
+        }
+
+        function calculateKeywordTrends(reviews, keywords) {
+            // Group reviews by week
+            const weeklyData = {};
+            const weeks = [];
+            
+            reviews.forEach(review => {
+                if (review.date) {
+                    const date = new Date(review.date);
+                    const weekKey = getWeekKey(date);
+                    
+                    if (!weeklyData[weekKey]) {
+                        weeklyData[weekKey] = { reviews: [], keywords: {} };
+                        weeks.push(weekKey);
+                    }
+                    
+                    weeklyData[weekKey].reviews.push(review);
+                }
+            });
+            
+            // Sort weeks
+            weeks.sort();
+            
+            // Count keyword mentions per week
+            const result = { weeks };
+            keywords.forEach(keyword => {
+                result[keyword] = weeks.map(week => {
+                    const weekReviews = weeklyData[week]?.reviews || [];
+                    return weekReviews.filter(review => 
+                        review.content && review.content.toLowerCase().includes(keyword.toLowerCase())
+                    ).length;
+                });
+            });
+            
+            return result;
+        }
+
+        function getWeekKey(date) {
+            const year = date.getFullYear();
+            const week = getWeekNumber(date);
+            return `${year}-W${week.toString().padStart(2, '0')}`;
+        }
+
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
         }
     </script>
 </body>
