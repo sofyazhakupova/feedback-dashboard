@@ -1107,6 +1107,36 @@
                                 </small>
                             </div>
                         </div>
+                        
+                        <!-- User Type and Keywords -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-user-tag me-2"></i>
+                                            User Type Analysis
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="editUserTypeDisplay"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-tags me-2"></i>
+                                            Keywords Cloud
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="editKeywordsCloud"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -2137,12 +2167,17 @@
             const userType = analyzeUserType(review.content, review.author);
             const keywords = extractKeywords(review.content);
             const info = `
-                <strong>User Type:</strong> ${userType} • 
-                <strong>Keywords:</strong> ${keywords.length > 0 ? keywords.slice(0, 5).join(', ') : 'None'} • 
                 <strong>Previously Edited:</strong> ${review.edited ? 'Yes' : 'No'} • 
-                <strong>Source:</strong> ${review.source || 'Unknown'}
+                <strong>Source:</strong> ${review.source || 'Unknown'} • 
+                <strong>Total Keywords:</strong> ${keywords.length}
             `;
             document.getElementById('editReviewInfo').innerHTML = info;
+            
+            // Display user type analysis
+            displayUserTypeAnalysis(userType, review);
+            
+            // Display keywords cloud
+            displayKeywordsCloud(keywords);
             
             // Show the modal
             const modal = new bootstrap.Modal(document.getElementById('viewEditModal'));
@@ -2209,6 +2244,124 @@
                 
                 alert('✅ Review deleted successfully!');
             }
+        }
+
+        function displayUserTypeAnalysis(userType, review) {
+            const container = document.getElementById('editUserTypeDisplay');
+            
+            let badgeClass = 'bg-secondary';
+            let icon = 'fas fa-question-circle';
+            let confidence = 'Low';
+            
+            if (userType === 'premium') {
+                badgeClass = 'bg-dark';
+                icon = 'fas fa-crown';
+                confidence = 'High';
+            } else if (userType === 'free') {
+                badgeClass = 'bg-light text-dark';
+                icon = 'fas fa-user';
+                confidence = 'Medium';
+            }
+            
+            // Get user type indicators from the review content
+            const indicators = getUserTypeIndicators(review.content);
+            
+            container.innerHTML = `
+                <div class="text-center mb-3">
+                    <span class="badge ${badgeClass} fs-6">
+                        <i class="${icon} me-2"></i>${userType.toUpperCase()}
+                    </span>
+                    <div class="mt-2">
+                        <small class="text-muted">Confidence: ${confidence}</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6 class="mb-2">Analysis Indicators:</h6>
+                    ${indicators.length > 0 ? 
+                        indicators.map(indicator => `<div class="mb-1"><i class="fas fa-check text-success me-2"></i><small>${indicator}</small></div>`).join('') :
+                        '<div class="text-muted"><small>No specific indicators found</small></div>'
+                    }
+                </div>
+            `;
+        }
+
+        function getUserTypeIndicators(content) {
+            const indicators = [];
+            const contentLower = content.toLowerCase();
+            
+            // Premium indicators
+            if (contentLower.includes('premium') || contentLower.includes('pro') || contentLower.includes('paid')) {
+                indicators.push('Mentions premium/pro features');
+            }
+            if (contentLower.includes('subscription') || contentLower.includes('upgrade')) {
+                indicators.push('References subscription/upgrade');
+            }
+            if (contentLower.includes('worth the money') || contentLower.includes('value for money')) {
+                indicators.push('Discusses pricing value');
+            }
+            
+            // Free indicators
+            if (contentLower.includes('free') || contentLower.includes('trial')) {
+                indicators.push('Mentions free/trial usage');
+            }
+            if (contentLower.includes('limited') || contentLower.includes('basic')) {
+                indicators.push('References limited features');
+            }
+            
+            return indicators;
+        }
+
+        function displayKeywordsCloud(keywords) {
+            const container = document.getElementById('editKeywordsCloud');
+            
+            if (keywords.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted"><small>No keywords detected</small></div>';
+                return;
+            }
+            
+            // Sort keywords by frequency (if available) or alphabetically
+            const sortedKeywords = keywords.sort();
+            
+            // Create keyword cloud with different sizes based on position
+            const keywordCloud = sortedKeywords.slice(0, 15).map((keyword, index) => {
+                let sizeClass = 'fs-6'; // Default size
+                let badgeClass = 'bg-light text-dark';
+                
+                // Different sizes for visual hierarchy
+                if (index < 3) {
+                    sizeClass = 'fs-5';
+                    badgeClass = 'bg-primary text-white';
+                } else if (index < 6) {
+                    sizeClass = 'fs-6';
+                    badgeClass = 'bg-info text-white';
+                } else if (index < 10) {
+                    sizeClass = 'fs-6';
+                    badgeClass = 'bg-light text-dark';
+                } else {
+                    sizeClass = 'fs-7';
+                    badgeClass = 'bg-secondary text-white';
+                }
+                
+                return `<span class="badge ${badgeClass} me-1 mb-1 ${sizeClass}">${keyword}</span>`;
+            }).join('');
+            
+            container.innerHTML = `
+                <div class="mb-3">
+                    ${keywordCloud}
+                </div>
+                ${keywords.length > 15 ? 
+                    `<div class="text-center">
+                        <small class="text-muted">Showing top 15 of ${keywords.length} keywords</small>
+                    </div>` : 
+                    ''
+                }
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Keywords are extracted from review content using smart analysis
+                    </small>
+                </div>
+            `;
         }
     </script>
 </body>
