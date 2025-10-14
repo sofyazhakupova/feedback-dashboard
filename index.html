@@ -1993,10 +1993,35 @@
         }
 
         function updatePainPointsChart(reviews) {
-            const painPoints = extractPainPoints(reviews);
             const container = document.getElementById('painPointsChart');
             
-            if (painPoints.length === 0) {
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <p>No pain points data available</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const painPoints = analyzePainPoints(reviews);
+            
+            // Combine all pain points and sort by frequency
+            const allPainPoints = [];
+            Object.entries(painPoints.critical).forEach(([text, count]) => allPainPoints.push({text, count, category: 'Critical'}));
+            Object.entries(painPoints.features).forEach(([text, count]) => allPainPoints.push({text, count, category: 'Feature'}));
+            Object.entries(painPoints.performance).forEach(([text, count]) => allPainPoints.push({text, count, category: 'Performance'}));
+            Object.entries(painPoints.ux).forEach(([text, count]) => allPainPoints.push({text, count, category: 'UX'}));
+            
+            // Sort by frequency and take top 8 for chart
+            const sortedPainPoints = allPainPoints
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8);
+            
+            if (sortedPainPoints.length === 0) {
                 container.innerHTML = `
                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
                         <div class="text-center">
@@ -2010,8 +2035,8 @@
             
             // Create pie chart using Plotly
             const data = [{
-                values: painPoints.slice(0, 8).map(p => p.count),
-                labels: painPoints.slice(0, 8).map(p => p.text),
+                values: sortedPainPoints.map(p => p.count),
+                labels: sortedPainPoints.map(p => p.text),
                 type: 'pie',
                 textinfo: 'label+percent',
                 textposition: 'outside',
@@ -2039,10 +2064,9 @@
         }
 
         function updateRequestedFeaturesChart(reviews) {
-            const features = extractRequestedFeatures(reviews);
             const container = document.getElementById('requestedFeaturesChart');
             
-            if (features.length === 0) {
+            if (reviews.length === 0) {
                 container.innerHTML = `
                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
                         <div class="text-center">
@@ -2053,11 +2077,59 @@
                 `;
                 return;
             }
+
+            // Use the existing feature requests from keywords manager
+            const featureRequests = customKeywords.featureRequests || [];
+            
+            if (featureRequests.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <p>No feature requests configured</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Count mentions of each feature request in reviews
+            const requestCounts = {};
+            featureRequests.forEach(request => {
+                requestCounts[request] = 0;
+            });
+
+            reviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                featureRequests.forEach(request => {
+                    if (content.includes(request.toLowerCase())) {
+                        requestCounts[request] = (requestCounts[request] || 0) + 1;
+                    }
+                });
+            });
+
+            // Sort by frequency and take top 8 for chart, filter out 0 mentions
+            const sortedRequests = Object.entries(requestCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 8)
+                .filter(([,count]) => count > 0); // Only show requests that were mentioned
+            
+            if (sortedRequests.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <p>No feature requests mentioned in reviews</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             
             // Create pie chart using Plotly
             const data = [{
-                values: features.slice(0, 8).map(f => f.count),
-                labels: features.slice(0, 8).map(f => f.text),
+                values: sortedRequests.map(([request, count]) => count),
+                labels: sortedRequests.map(([request, count]) => request),
                 type: 'pie',
                 textinfo: 'label+percent',
                 textposition: 'outside',
