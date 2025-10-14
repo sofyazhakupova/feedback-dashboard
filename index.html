@@ -543,6 +543,7 @@
                                 <h4 class="card-title">Avg Rating (Total)</h4>
                                 <h2 id="total-avg-rating">0.0</h2>
                                 <small style="color: var(--medium-gray);" id="total-rating-change">No change</small>
+                                <div id="total-rating-trend" style="height: 40px; margin-top: 8px;"></div>
                             </div>
                         </div>
                     </div>
@@ -553,6 +554,7 @@
                                 <h4 class="card-title">Google Play Avg</h4>
                                 <h2 id="playstore-avg-rating">0.0</h2>
                                 <small style="color: var(--medium-gray);" id="playstore-rating-change">No change</small>
+                                <div id="playstore-rating-trend" style="height: 40px; margin-top: 8px;"></div>
                             </div>
                         </div>
                     </div>
@@ -563,6 +565,7 @@
                                 <h4 class="card-title">Apple Store Avg</h4>
                                 <h2 id="appstore-avg-rating">0.0</h2>
                                 <small style="color: var(--medium-gray);" id="appstore-rating-change">No change</small>
+                                <div id="appstore-rating-trend" style="height: 40px; margin-top: 8px;"></div>
                             </div>
                         </div>
                     </div>
@@ -592,7 +595,7 @@
                                         <small class="text-muted">Select keywords to analyze trends over time (max 5)</small>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="d-flex gap-2">
+                                        <div class="d-flex justify-content-end">
                                             <button class="btn btn-sm btn-outline-secondary" onclick="showKeywordsTab()" title="Manage Keywords">
                                                 <i class="fas fa-cog"></i>
                                             </button>
@@ -1734,8 +1737,10 @@
 
         function updateDashboardForPeriod(days) {
             console.log(`Updating dashboard for last ${days} days`);
+            console.log(`Total reviews available: ${allReviews.length}`);
             
             if (allReviews.length === 0) {
+                console.log('No reviews available');
                 return;
             }
 
@@ -1744,17 +1749,21 @@
             if (days === 0) {
                 // All time - no filtering
                 filteredReviews = allReviews;
+                console.log(`All time selected - showing all ${filteredReviews.length} reviews`);
             } else {
                 // Filter reviews by date
                 const cutoffDate = new Date();
                 cutoffDate.setDate(cutoffDate.getDate() - days);
+                console.log(`Filtering from date: ${cutoffDate.toISOString()}`);
                 
                 filteredReviews = allReviews.filter(review => {
                     const reviewDate = new Date(review.date);
                     return reviewDate >= cutoffDate;
                 });
+                console.log(`Filtered to ${filteredReviews.length} reviews`);
             }
 
+            console.log(`Updating dashboard with ${filteredReviews.length} reviews`);
             updateDashboardMetrics(filteredReviews);
             
             // Update keyword trends when global date selector changes
@@ -1843,6 +1852,127 @@
 
             // Update advanced analytics
             updateAdvancedAnalytics(reviews);
+            
+            // Update rating trend charts
+            updateRatingTrendCharts(reviews);
+        }
+
+        // Update small rating trend charts with previous period comparison
+        function updateRatingTrendCharts(reviews) {
+            const currentTimePeriod = getCurrentTimePeriod();
+            
+            // Skip trend charts for "All time" as there's no previous period to compare
+            if (currentTimePeriod === 'all' || currentTimePeriod === '0') {
+                document.getElementById('total-rating-trend').innerHTML = '';
+                document.getElementById('playstore-rating-trend').innerHTML = '';
+                document.getElementById('appstore-rating-trend').innerHTML = '';
+                return;
+            }
+            
+            const days = parseInt(currentTimePeriod);
+            const currentPeriodStart = new Date();
+            currentPeriodStart.setDate(currentPeriodStart.getDate() - days);
+            
+            const previousPeriodStart = new Date();
+            previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
+            
+            // Filter reviews for current and previous periods
+            const currentReviews = reviews.filter(review => {
+                const reviewDate = new Date(review.date);
+                return reviewDate >= currentPeriodStart;
+            });
+            
+            const previousReviews = reviews.filter(review => {
+                const reviewDate = new Date(review.date);
+                return reviewDate >= previousPeriodStart && reviewDate < currentPeriodStart;
+            });
+            
+            // Calculate current period averages
+            const currentTotalAvg = calculateAverageRating(currentReviews);
+            const currentPlayStoreAvg = calculateAverageRating(currentReviews.filter(r => r.source === 'google_play'));
+            const currentAppStoreAvg = calculateAverageRating(currentReviews.filter(r => r.source === 'app_store'));
+            
+            // Calculate previous period averages
+            const previousTotalAvg = calculateAverageRating(previousReviews);
+            const previousPlayStoreAvg = calculateAverageRating(previousReviews.filter(r => r.source === 'google_play'));
+            const previousAppStoreAvg = calculateAverageRating(previousReviews.filter(r => r.source === 'app_store'));
+            
+            // Update trend charts
+            updateSingleRatingTrend('total-rating-trend', currentTotalAvg, previousTotalAvg);
+            updateSingleRatingTrend('playstore-rating-trend', currentPlayStoreAvg, previousPlayStoreAvg);
+            updateSingleRatingTrend('appstore-rating-trend', currentAppStoreAvg, previousAppStoreAvg);
+        }
+        
+        // Calculate average rating for a set of reviews
+        function calculateAverageRating(reviews) {
+            const reviewsWithRating = reviews.filter(r => {
+                const rating = parseFloat(r.rating);
+                return !isNaN(rating) && rating > 0 && rating <= 5;
+            });
+            
+            if (reviewsWithRating.length === 0) return 0;
+            
+            const avg = reviewsWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviewsWithRating.length;
+            return Math.round(avg * 10) / 10;
+        }
+        
+        // Update a single rating trend chart
+        function updateSingleRatingTrend(containerId, currentAvg, previousAvg) {
+            const container = document.getElementById(containerId);
+            
+            if (currentAvg === 0 || previousAvg === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            // Create simple trend data (2 points: previous and current)
+            const trendData = [
+                { x: 0, y: previousAvg },
+                { x: 1, y: currentAvg }
+            ];
+            
+            // Determine trend direction and color
+            const isIncreasing = currentAvg > previousAvg;
+            const isDecreasing = currentAvg < previousAvg;
+            const trendColor = isIncreasing ? '#28a745' : isDecreasing ? '#dc3545' : '#6c757d';
+            
+            // Create mini chart using Plotly
+            const trace = {
+                x: trendData.map(d => d.x),
+                y: trendData.map(d => d.y),
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: {
+                    color: trendColor,
+                    width: 2
+                },
+                marker: {
+                    size: 4,
+                    color: trendColor
+                },
+                showlegend: false,
+                hoverinfo: 'skip'
+            };
+            
+            const layout = {
+                margin: { t: 0, b: 0, l: 0, r: 0 },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                xaxis: {
+                    visible: false
+                },
+                yaxis: {
+                    visible: false
+                },
+                autosize: true
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot(container, [trace], layout, config);
         }
 
         function updateAdvancedAnalytics(reviews) {
