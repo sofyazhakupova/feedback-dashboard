@@ -1080,6 +1080,51 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Pain Points Analysis -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Pain Points Analysis
+                                    </h6>
+                                    <small class="text-muted">Intelligent analysis of user frustrations and issues</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-danger">Critical Issues:</h6>
+                                            <div id="criticalPainPoints" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze pain points</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-warning">Feature Problems:</h6>
+                                            <div id="featurePainPoints" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze pain points</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-info">Performance Issues:</h6>
+                                            <div id="performancePainPoints" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze pain points</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-secondary">User Experience Issues:</h6>
+                                            <div id="uxPainPoints" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze pain points</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -3320,35 +3365,44 @@
         }
 
         function loadKeywordsManager() {
-            // Load competitors
+            // Calculate keyword frequencies
+            const keywordFrequencies = calculateKeywordFrequencies();
+            
+            // Load competitors with frequency
             const competitorsContainer = document.getElementById('competitorsKeywords');
-            competitorsContainer.innerHTML = customKeywords.competitors.map(keyword => 
-                `<span class="badge bg-danger me-1 mb-1">
-                    ${keyword}
+            competitorsContainer.innerHTML = customKeywords.competitors.map(keyword => {
+                const frequency = keywordFrequencies[keyword.toLowerCase()] || 0;
+                return `<span class="badge bg-danger me-1 mb-1">
+                    ${keyword} (${frequency})
                     <button class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" onclick="removeKeyword('competitors', '${keyword}')"></button>
-                </span>`
-            ).join('');
+                </span>`;
+            }).join('');
 
-            // Load golf features
+            // Load golf features with frequency
             const golfFeaturesContainer = document.getElementById('golfFeaturesKeywords');
-            golfFeaturesContainer.innerHTML = customKeywords.golfFeatures.map(keyword => 
-                `<span class="badge bg-success me-1 mb-1">
-                    ${keyword}
+            golfFeaturesContainer.innerHTML = customKeywords.golfFeatures.map(keyword => {
+                const frequency = keywordFrequencies[keyword.toLowerCase()] || 0;
+                return `<span class="badge bg-success me-1 mb-1">
+                    ${keyword} (${frequency})
                     <button class="btn-close btn-close-white ms-1" style="font-size: 0.7em;" onclick="removeKeyword('golfFeatures', '${keyword}')"></button>
-                </span>`
-            ).join('');
+                </span>`;
+            }).join('');
 
-            // Load feature requests
+            // Load feature requests with frequency
             const featureRequestsContainer = document.getElementById('featureRequestsKeywords');
-            featureRequestsContainer.innerHTML = customKeywords.featureRequests.map(keyword => 
-                `<span class="badge bg-warning text-dark me-1 mb-1">
-                    ${keyword}
+            featureRequestsContainer.innerHTML = customKeywords.featureRequests.map(keyword => {
+                const frequency = keywordFrequencies[keyword.toLowerCase()] || 0;
+                return `<span class="badge bg-warning text-dark me-1 mb-1">
+                    ${keyword} (${frequency})
                     <button class="btn-close btn-close-dark ms-1" style="font-size: 0.7em;" onclick="removeKeyword('featureRequests', '${keyword}')"></button>
-                </span>`
-            ).join('');
+                </span>`;
+            }).join('');
 
             // Update smart suggestions
             updateSmartSuggestions();
+            
+            // Update pain points analysis
+            updatePainPointsAnalysis();
             
             // Update filters in other tabs
             updateKeywordFilters();
@@ -3485,6 +3539,168 @@
             }
         }
 
+
+        // Calculate keyword frequencies from all reviews
+        function calculateKeywordFrequencies() {
+            const frequencies = {};
+            const allManagedKeywords = [
+                ...customKeywords.competitors,
+                ...customKeywords.golfFeatures,
+                ...customKeywords.featureRequests
+            ];
+            
+            allReviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                allManagedKeywords.forEach(keyword => {
+                    if (content.includes(keyword.toLowerCase())) {
+                        frequencies[keyword.toLowerCase()] = (frequencies[keyword.toLowerCase()] || 0) + 1;
+                    }
+                });
+            });
+            
+            return frequencies;
+        }
+
+        // Update pain points analysis
+        function updatePainPointsAnalysis() {
+            if (allReviews.length === 0) {
+                document.getElementById('criticalPainPoints').innerHTML = '<p class="text-muted small">Upload reviews to analyze pain points</p>';
+                document.getElementById('featurePainPoints').innerHTML = '<p class="text-muted small">Upload reviews to analyze pain points</p>';
+                document.getElementById('performancePainPoints').innerHTML = '<p class="text-muted small">Upload reviews to analyze pain points</p>';
+                document.getElementById('uxPainPoints').innerHTML = '<p class="text-muted small">Upload reviews to analyze pain points</p>';
+                return;
+            }
+
+            const painPoints = analyzePainPoints(allReviews);
+            
+            // Update Critical Issues
+            updatePainPointContainer('criticalPainPoints', painPoints.critical, 'danger');
+            
+            // Update Feature Problems
+            updatePainPointContainer('featurePainPoints', painPoints.features, 'warning');
+            
+            // Update Performance Issues
+            updatePainPointContainer('performancePainPoints', painPoints.performance, 'info');
+            
+            // Update UX Issues
+            updatePainPointContainer('uxPainPoints', painPoints.ux, 'secondary');
+        }
+
+        // Analyze pain points from reviews
+        function analyzePainPoints(reviews) {
+            const painPoints = {
+                critical: {},
+                features: {},
+                performance: {},
+                ux: {}
+            };
+
+            // Define pain point patterns
+            const criticalPatterns = [
+                /(crash|crashing|broken|not working|doesn't work|failed|failure|error|bug)/gi,
+                /(can't|cannot|unable to|impossible|useless|terrible|awful|horrible)/gi
+            ];
+
+            const featurePatterns = [
+                /(gps.*?(inaccurate|wrong|off|incorrect|bad|terrible|useless))/gi,
+                /(yardage.*?(wrong|inaccurate|off|incorrect|bad|terrible|useless))/gi,
+                /(scorecard.*?(broken|not working|doesn't work|failed|error|bug))/gi,
+                /(handicap.*?(wrong|inaccurate|incorrect|bad|terrible|useless))/gi,
+                /(weather.*?(wrong|inaccurate|off|incorrect|bad|terrible|useless))/gi
+            ];
+
+            const performancePatterns = [
+                /(slow|laggy|lagging|freeze|freezing|hanging|loading|timeout)/gi,
+                /(battery.*?(drain|draining|dead|dies|killed))/gi,
+                /(memory.*?(full|leak|leaking|running out))/gi,
+                /(signal.*?(lost|losing|weak|poor|bad))/gi
+            ];
+
+            const uxPatterns = [
+                /(confusing|complicated|difficult|hard to use|unintuitive|cluttered)/gi,
+                /(interface.*?(bad|terrible|awful|horrible|confusing|complicated))/gi,
+                /(navigation.*?(bad|terrible|awful|horrible|confusing|complicated))/gi,
+                /(design.*?(bad|terrible|awful|horrible|confusing|complicated))/gi
+            ];
+
+            reviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                const rating = parseFloat(review.rating) || 0;
+                
+                // Only analyze negative reviews (rating <= 3) or reviews with negative sentiment
+                if (rating <= 3 || content.includes('bad') || content.includes('terrible') || content.includes('awful')) {
+                    
+                    // Critical Issues
+                    criticalPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                painPoints.critical[key] = (painPoints.critical[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Feature Problems
+                    featurePatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                painPoints.features[key] = (painPoints.features[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Performance Issues
+                    performancePatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                painPoints.performance[key] = (painPoints.performance[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // UX Issues
+                    uxPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                painPoints.ux[key] = (painPoints.ux[key] || 0) + 1;
+                            });
+                        }
+                    });
+                }
+            });
+
+            return painPoints;
+        }
+
+        // Update pain point container
+        function updatePainPointContainer(containerId, painPoints, badgeClass) {
+            const container = document.getElementById(containerId);
+            
+            if (Object.keys(painPoints).length === 0) {
+                container.innerHTML = '<p class="text-muted small">No pain points found in this category</p>';
+                return;
+            }
+
+            // Sort by frequency and take top 10
+            const sortedPainPoints = Object.entries(painPoints)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+
+            const painPointHTML = sortedPainPoints.map(([painPoint, count]) => 
+                `<span class="badge bg-${badgeClass} me-1 mb-1" title="${count} mentions">
+                    ${painPoint} (${count})
+                </span>`
+            ).join('');
+
+            container.innerHTML = painPointHTML;
+        }
 
         // Update keyword filters in Reviews List tab
         function updateKeywordFilters() {
