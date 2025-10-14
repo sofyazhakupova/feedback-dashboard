@@ -578,20 +578,78 @@
                     </div>
                 </div>
 
-                <!-- Most Frequent Keywords Cloud -->
-                <div class="row mb-4">
+                <!-- Combined Keywords and Trends -->
+                <div class="row mb-5">
                     <div class="col-12">
-                        <div class="card">
+                        <div class="card chart-card">
                             <div class="card-header">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-tags me-2"></i>
-                                    Most Frequent Keywords
-                                </h5>
-                                <small class="text-muted" id="keywords-period-change">Compared to previous period</small>
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            Keyword Trends & Analysis
+                                        </h5>
+                                        <small class="text-muted">Select keywords to analyze trends over time (max 5)</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="updateKeywordTrends()">
+                                                Update Chart
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="showKeywordsTab()" title="Manage Keywords">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="card-body">
-                                <div id="keywordsCloud" class="text-center">
-                                    <p class="text-muted">No keywords available</p>
+                                <!-- Keyword Selection List -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                <i class="fas fa-search me-2"></i>Search Keywords
+                                            </label>
+                                            <input type="text" class="form-control" id="keywordSearchInput" placeholder="Search keywords..." onkeyup="filterKeywords()">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                <i class="fas fa-calendar me-2"></i>Time Period
+                                            </label>
+                                            <select class="form-select" id="trendTimePeriod" onchange="updateKeywordTrends()">
+                                                <option value="7">Last 7 days</option>
+                                                <option value="30" selected>Last 30 days</option>
+                                                <option value="90">Last 3 months</option>
+                                                <option value="180">Last 6 months</option>
+                                                <option value="365">Last year</option>
+                                                <option value="all">All time</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Keywords List with Checkboxes -->
+                                <div class="mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-check-square me-2"></i>Select Keywords (max 5)
+                                        <span class="badge bg-secondary ms-2" id="selectedKeywordsCount">0</span>
+                                    </label>
+                                    <div id="keywordsList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                        <p class="text-muted text-center">No keywords available</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Trend Chart -->
+                                <div id="keywordTrendsChart" style="height: 400px;">
+                                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                                        <div class="text-center">
+                                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                            <p>Select keywords to see trends</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -691,46 +749,6 @@
                     </div>
                 </div>
 
-                <!-- Keyword Trends Chart -->
-                <div class="row mb-5">
-                    <div class="col-12">
-                        <div class="card chart-card">
-                            <div class="card-header">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-chart-line me-2"></i>
-                                            Keyword Trends
-                                        </h5>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex gap-2">
-                                            <select class="form-select form-select-sm" id="keywordSelector" multiple>
-                                                <option value="">Select keywords...</option>
-                                            </select>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="updateKeywordTrends()">
-                                                Update Chart
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="showKeywordsTab()" title="Manage Keywords">
-                                                <i class="fas fa-cog"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div id="keywordTrendsChart" style="height: 400px;">
-                                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
-                                        <div class="text-center">
-                                            <i class="fas fa-chart-line fa-3x mb-3"></i>
-                                            <p>Select keywords to see trends</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Rating and Trends -->
                 <div class="row mb-5">
@@ -1796,6 +1814,9 @@
             // Update keyword cloud
             updateKeywordsCloud(reviews);
             
+            // Update keywords list for trends
+            updateKeywordsList();
+            
             // Update lists
             updatePainPointsList(reviews);
             updateAdvantagesList(reviews);
@@ -2216,12 +2237,124 @@
             });
         }
 
-        function updateKeywordTrends() {
-            const selector = document.getElementById('keywordSelector');
-            const selectedKeywords = Array.from(selector.selectedOptions).map(option => option.value);
-            const container = document.getElementById('keywordTrendsChart');
+        // Global variable to store selected keywords for trends
+        let selectedKeywordsForTrends = [];
+
+        // Update keywords list with checkboxes
+        function updateKeywordsList() {
+            const container = document.getElementById('keywordsList');
+            const searchInput = document.getElementById('keywordSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
             
-            if (selectedKeywords.length === 0) {
+            // Get all managed keywords from customKeywords
+            const managedKeywords = [
+                ...customKeywords.competitors,
+                ...customKeywords.golfFeatures,
+                ...customKeywords.featureRequests
+            ];
+            
+            if (managedKeywords.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No keywords managed yet. Add keywords in Keywords tab.</p>';
+                return;
+            }
+
+            // Count keyword frequency in reviews
+            const keywordCounts = {};
+            managedKeywords.forEach(keyword => {
+                keywordCounts[keyword] = 0;
+            });
+
+            allReviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                managedKeywords.forEach(keyword => {
+                    if (content.includes(keyword.toLowerCase())) {
+                        keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+                    }
+                });
+            });
+
+            // Filter keywords based on search term
+            const filteredKeywords = managedKeywords.filter(keyword => 
+                keyword.toLowerCase().includes(searchTerm)
+            );
+
+            // Sort by frequency
+            const sortedKeywords = filteredKeywords
+                .map(keyword => ({ keyword, count: keywordCounts[keyword] }))
+                .sort((a, b) => b.count - a.count);
+
+            if (sortedKeywords.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No keywords match your search.</p>';
+                return;
+            }
+
+            // Create checkboxes
+            const checkboxesHTML = sortedKeywords.map(({ keyword, count }) => {
+                const isSelected = selectedKeywordsForTrends.includes(keyword);
+                const isDisabled = !isSelected && selectedKeywordsForTrends.length >= 5;
+                
+                return `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" 
+                               id="keyword-${keyword}" 
+                               value="${keyword}" 
+                               ${isSelected ? 'checked' : ''} 
+                               ${isDisabled ? 'disabled' : ''}
+                               onchange="toggleKeywordSelection('${keyword}')">
+                        <label class="form-check-label d-flex justify-content-between align-items-center" for="keyword-${keyword}">
+                            <span>${keyword}</span>
+                            <span class="badge bg-secondary">${count}</span>
+                        </label>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = checkboxesHTML;
+            updateSelectedKeywordsCount();
+        }
+
+        // Toggle keyword selection for trends
+        function toggleKeywordSelection(keyword) {
+            const checkbox = document.getElementById(`keyword-${keyword}`);
+            
+            if (checkbox.checked) {
+                if (selectedKeywordsForTrends.length < 5) {
+                    selectedKeywordsForTrends.push(keyword);
+                } else {
+                    checkbox.checked = false;
+                    alert('Maximum 5 keywords can be selected for trends analysis.');
+                    return;
+                }
+            } else {
+                selectedKeywordsForTrends = selectedKeywordsForTrends.filter(k => k !== keyword);
+            }
+            
+            updateSelectedKeywordsCount();
+            updateKeywordsList(); // Refresh to update disabled state
+            updateKeywordTrends(); // Auto-update chart
+        }
+
+        // Update selected keywords count badge
+        function updateSelectedKeywordsCount() {
+            const countElement = document.getElementById('selectedKeywordsCount');
+            if (countElement) {
+                countElement.textContent = selectedKeywordsForTrends.length;
+                countElement.className = selectedKeywordsForTrends.length > 0 ? 
+                    'badge bg-primary ms-2' : 'badge bg-secondary ms-2';
+            }
+        }
+
+        // Filter keywords based on search input
+        function filterKeywords() {
+            updateKeywordsList();
+        }
+
+        function updateKeywordTrends() {
+            const container = document.getElementById('keywordTrendsChart');
+            const timePeriodSelect = document.getElementById('trendTimePeriod');
+            const timePeriod = timePeriodSelect ? timePeriodSelect.value : '30';
+            
+            if (selectedKeywordsForTrends.length === 0) {
                 container.innerHTML = `
                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
                         <div class="text-center">
@@ -2234,33 +2367,131 @@
             }
             
             // Get filtered reviews based on selected period
-            const filteredReviews = getFilteredReviewsByPeriod(allReviews);
-            const trendData = calculateKeywordTrends(filteredReviews, selectedKeywords);
+            let filteredReviews = allReviews;
+            if (timePeriod !== 'all') {
+                const days = parseInt(timePeriod);
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - days);
+                filteredReviews = allReviews.filter(review => {
+                    const reviewDate = new Date(review.date);
+                    return reviewDate >= cutoffDate;
+                });
+            }
             
-            // Create line chart
-            const data = selectedKeywords.map((keyword, index) => ({
-                x: trendData.weeks,
-                y: trendData[keyword] || [],
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: keyword,
-                line: {
-                    color: ['#ff6b6b', '#4d9de0', '#6bcf7f', '#ffd93d', '#e15554'][index % 5]
-                }
-            }));
+            if (filteredReviews.length === 0) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <p>No reviews found for the selected time period</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group reviews by week
+            const weeklyData = {};
+            const colors = ['#ff6b6b', '#ff8e53', '#ff6b9d', '#c44569', '#f8b500'];
+            
+            selectedKeywordsForTrends.forEach((keyword, index) => {
+                weeklyData[keyword] = {};
+                
+                filteredReviews.forEach(review => {
+                    const reviewDate = new Date(review.date);
+                    const weekKey = getWeekKey(reviewDate);
+                    
+                    if (!weeklyData[keyword][weekKey]) {
+                        weeklyData[keyword][weekKey] = 0;
+                    }
+                    
+                    if (review.content && review.content.toLowerCase().includes(keyword.toLowerCase())) {
+                        weeklyData[keyword][weekKey]++;
+                    }
+                });
+            });
+            
+            // Prepare data for Plotly
+            const traces = selectedKeywordsForTrends.map((keyword, index) => {
+                const weeks = Object.keys(weeklyData[keyword]).sort();
+                const counts = weeks.map(week => weeklyData[keyword][week]);
+                
+                return {
+                    x: weeks,
+                    y: counts,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: keyword,
+                    line: {
+                        color: colors[index % colors.length],
+                        width: 3
+                    },
+                    marker: {
+                        size: 6,
+                        color: colors[index % colors.length]
+                    }
+                };
+            });
             
             const layout = {
-                title: 'Keyword Mention Trends (Weekly)',
-                xaxis: { title: 'Week' },
-                yaxis: { title: 'Number of Mentions' },
-                paper_bgcolor: 'transparent',
+                title: {
+                    text: `Keyword Trends - ${getTimePeriodLabel(timePeriod)}`,
+                    font: { size: 16, color: '#24292f' }
+                },
+                xaxis: {
+                    title: 'Week',
+                    gridcolor: '#e1e4e8',
+                    color: '#24292f'
+                },
+                yaxis: {
+                    title: 'Mentions',
+                    gridcolor: '#e1e4e8',
+                    color: '#24292f'
+                },
                 plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
                 font: {
                     color: '#24292f'
-                }
+                },
+                legend: {
+                    orientation: 'h',
+                    y: -0.2,
+                    x: 0.5,
+                    xanchor: 'center'
+                },
+                margin: { t: 60, b: 80, l: 60, r: 40 }
             };
             
-            Plotly.newPlot(container, data, layout, {responsive: true});
+            Plotly.newPlot(container, traces, layout, {responsive: true});
+        }
+        
+        // Helper function to get week key
+        function getWeekKey(date) {
+            const year = date.getFullYear();
+            const week = getWeekNumber(date);
+            return `${year}-W${week.toString().padStart(2, '0')}`;
+        }
+        
+        // Helper function to get week number
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+        
+        // Helper function to get time period label
+        function getTimePeriodLabel(period) {
+            const labels = {
+                '7': 'Last 7 days',
+                '30': 'Last 30 days',
+                '90': 'Last 3 months',
+                '180': 'Last 6 months',
+                '365': 'Last year',
+                'all': 'All time'
+            };
+            return labels[period] || 'Last 30 days';
         }
 
         function updateCharts(reviews) {
