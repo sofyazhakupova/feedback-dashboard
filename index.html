@@ -2041,7 +2041,20 @@
                 textinfo: 'label+percent',
                 textposition: 'outside',
                 marker: {
-                    colors: ['#e16259', '#d9730d', '#b45309', '#a16207', '#65a30d', '#16a34a', '#059669', '#0d9488']
+                    colors: ['#ffb3ba', '#ffdfba', '#ffffba', '#baffc9', '#bae1ff', '#ffb3e6', '#c9baff', '#e6baff'],
+                    line: {
+                        color: '#ffffff',
+                        width: 2
+                    }
+                },
+                hovertemplate: '<b>%{label}</b><br>Mentions: %{value}<br>Percentage: %{percent}<extra></extra>',
+                hoverlabel: {
+                    bgcolor: '#ffffff',
+                    bordercolor: '#333333',
+                    font: {
+                        color: '#333333',
+                        size: 14
+                    }
                 }
             }];
             
@@ -2052,10 +2065,16 @@
                 plot_bgcolor: 'transparent',
                 font: {
                     color: '#24292f'
-                }
+                },
+                hovermode: 'closest'
             };
             
-            Plotly.newPlot(container, data, layout, {responsive: true});
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot(container, data, layout, config);
         }
 
         function updateRequestedFeaturesChart(reviews) {
@@ -2129,7 +2148,20 @@
                 textinfo: 'label+percent',
                 textposition: 'outside',
                 marker: {
-                    colors: ['#2563eb', '#7c3aed', '#c026d3', '#db2777', '#dc2626', '#ea580c', '#d97706', '#ca8a04']
+                    colors: ['#ffd93d', '#6bcf7f', '#4d9de0', '#e15554', '#e1bc29', '#3bb273', '#7768ae', '#f7b2ad'],
+                    line: {
+                        color: '#ffffff',
+                        width: 2
+                    }
+                },
+                hovertemplate: '<b>%{label}</b><br>Mentions: %{value}<br>Percentage: %{percent}<extra></extra>',
+                hoverlabel: {
+                    bgcolor: '#ffffff',
+                    bordercolor: '#333333',
+                    font: {
+                        color: '#333333',
+                        size: 14
+                    }
                 }
             }];
             
@@ -2140,10 +2172,16 @@
                 plot_bgcolor: 'transparent',
                 font: {
                     color: '#24292f'
-                }
+                },
+                hovermode: 'closest'
             };
             
-            Plotly.newPlot(container, data, layout, {responsive: true});
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+            
+            Plotly.newPlot(container, data, layout, config);
         }
 
         function updateKeywordSelector(reviews) {
