@@ -540,7 +540,7 @@
                         <div class="card metric-card h-100">
                             <div class="card-body text-center">
                                 <i class="fas fa-star fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Avg Rating (Total)</h4>
+                                <h4 class="card-title">Avg Rating (3M)</h4>
                                 <h2 id="total-avg-rating">0.0</h2>
                                 <small style="color: var(--medium-gray);" id="total-rating-change">No change</small>
                                 <div id="total-rating-trend" style="height: 40px; margin-top: 8px;"></div>
@@ -551,7 +551,7 @@
                         <div class="card metric-card h-100">
                             <div class="card-body text-center">
                                 <i class="fab fa-google-play fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Google Play Avg</h4>
+                                <h4 class="card-title">Google Play (3M)</h4>
                                 <h2 id="playstore-avg-rating">0.0</h2>
                                 <small style="color: var(--medium-gray);" id="playstore-rating-change">No change</small>
                                 <div id="playstore-rating-trend" style="height: 40px; margin-top: 8px;"></div>
@@ -562,7 +562,7 @@
                         <div class="card metric-card h-100">
                             <div class="card-body text-center">
                                 <i class="fab fa-apple fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Apple Store Avg</h4>
+                                <h4 class="card-title">Apple Store (3M)</h4>
                                 <h2 id="appstore-avg-rating">0.0</h2>
                                 <small style="color: var(--medium-gray);" id="appstore-rating-change">No change</small>
                                 <div id="appstore-rating-trend" style="height: 40px; margin-top: 8px;"></div>
@@ -1822,154 +1822,146 @@
                 document.getElementById('total-avg-rating').textContent = '0.0';
                 document.getElementById('playstore-avg-rating').textContent = '0.0';
                 document.getElementById('appstore-avg-rating').textContent = '0.0';
+                // Clear comparison and trend charts
+                document.getElementById('total-rating-change').textContent = 'No data';
+                document.getElementById('playstore-rating-change').textContent = 'No data';
+                document.getElementById('appstore-rating-change').textContent = 'No data';
+                document.getElementById('total-rating-trend').innerHTML = '';
+                document.getElementById('playstore-rating-trend').innerHTML = '';
+                document.getElementById('appstore-rating-trend').innerHTML = '';
                 return;
             }
 
             // Update total reviews
             document.getElementById('total-reviews').textContent = reviews.length.toLocaleString();
 
-            // Calculate total average rating
-            const reviewsWithRating = reviews.filter(r => {
-                const rating = parseFloat(r.rating);
-                return !isNaN(rating) && rating > 0 && rating <= 5;
-            });
-            if (reviewsWithRating.length > 0) {
-                const avgRating = reviewsWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviewsWithRating.length;
-                document.getElementById('total-avg-rating').textContent = Math.round(avgRating * 10) / 10;
-            } else {
-                document.getElementById('total-avg-rating').textContent = '0.0';
-            }
-
-            // Calculate Play Store average
-            const playStoreReviews = reviews.filter(r => r.source === 'google_play');
-            const playStoreWithRating = playStoreReviews.filter(r => {
-                const rating = parseFloat(r.rating);
-                return !isNaN(rating) && rating > 0 && rating <= 5;
-            });
-            if (playStoreWithRating.length > 0) {
-                const playStoreAvg = playStoreWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / playStoreWithRating.length;
-                document.getElementById('playstore-avg-rating').textContent = Math.round(playStoreAvg * 10) / 10;
-            } else {
-                document.getElementById('playstore-avg-rating').textContent = '0.0';
-            }
-
-            // Calculate Apple Store average
-            const appStoreReviews = reviews.filter(r => r.source === 'app_store');
-            const appStoreWithRating = appStoreReviews.filter(r => {
-                const rating = parseFloat(r.rating);
-                return !isNaN(rating) && rating > 0 && rating <= 5;
-            });
-            if (appStoreWithRating.length > 0) {
-                const appStoreAvg = appStoreWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / appStoreWithRating.length;
-                document.getElementById('appstore-avg-rating').textContent = Math.round(appStoreAvg * 10) / 10;
-            } else {
-                document.getElementById('appstore-avg-rating').textContent = '0.0';
-            }
+            // Always calculate 3-month averages regardless of current time period
+            updateThreeMonthRatingMetrics(reviews);
 
             // Update advanced analytics
             updateAdvancedAnalytics(reviews);
-            
-            // Update rating trend charts
-            updateRatingTrendCharts(reviews);
         }
 
-        // Update small rating trend charts with previous period comparison
-        function updateRatingTrendCharts(reviews) {
-            console.log('updateRatingTrendCharts called with', reviews.length, 'reviews');
-            const currentTimePeriod = getCurrentTimePeriod();
-            console.log('Current time period:', currentTimePeriod);
+        // Calculate 3-month rating averages with comparison to previous 3 months
+        function updateThreeMonthRatingMetrics(reviews) {
+            console.log('Calculating 3-month rating metrics...');
             
-            // Skip trend charts for "All time" as there's no previous period to compare
-            if (currentTimePeriod === 'all' || currentTimePeriod === '0') {
-                console.log('Skipping trend charts for All time period');
-                document.getElementById('total-rating-trend').innerHTML = '';
-                document.getElementById('playstore-rating-trend').innerHTML = '';
-                document.getElementById('appstore-rating-trend').innerHTML = '';
+            // Define 3-month periods
+            const now = new Date();
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+            
+            // Filter reviews for current 3 months
+            const currentPeriodReviews = reviews.filter(review => {
+                const reviewDate = new Date(review.date);
+                return reviewDate >= threeMonthsAgo;
+            });
+            
+            // Filter reviews for previous 3 months
+            const previousPeriodReviews = reviews.filter(review => {
+                const reviewDate = new Date(review.date);
+                return reviewDate >= sixMonthsAgo && reviewDate < threeMonthsAgo;
+            });
+            
+            console.log(`Current 3 months: ${currentPeriodReviews.length} reviews`);
+            console.log(`Previous 3 months: ${previousPeriodReviews.length} reviews`);
+            
+            // Calculate current period averages
+            const currentTotalAvg = calculateAverageRating(currentPeriodReviews);
+            const currentPlayStoreAvg = calculateAverageRating(currentPeriodReviews.filter(r => r.source === 'google_play'));
+            const currentAppStoreAvg = calculateAverageRating(currentPeriodReviews.filter(r => r.source === 'app_store'));
+            
+            // Calculate previous period averages
+            const previousTotalAvg = calculateAverageRating(previousPeriodReviews);
+            const previousPlayStoreAvg = calculateAverageRating(previousPeriodReviews.filter(r => r.source === 'google_play'));
+            const previousAppStoreAvg = calculateAverageRating(previousPeriodReviews.filter(r => r.source === 'app_store'));
+            
+            // Update rating displays
+            document.getElementById('total-avg-rating').textContent = currentTotalAvg.toFixed(1);
+            document.getElementById('playstore-avg-rating').textContent = currentPlayStoreAvg.toFixed(1);
+            document.getElementById('appstore-avg-rating').textContent = currentAppStoreAvg.toFixed(1);
+            
+            // Update comparison text
+            updateRatingComparison('total-rating-change', currentTotalAvg, previousTotalAvg);
+            updateRatingComparison('playstore-rating-change', currentPlayStoreAvg, previousPlayStoreAvg);
+            updateRatingComparison('appstore-rating-change', currentAppStoreAvg, previousAppStoreAvg);
+            
+            // Update trend charts (monthly data for 6 months)
+            updateRatingTrendPreview('total-rating-trend', reviews, 'total');
+            updateRatingTrendPreview('playstore-rating-trend', reviews, 'google_play');
+            updateRatingTrendPreview('appstore-rating-trend', reviews, 'app_store');
+        }
+        
+        // Update rating comparison text
+        function updateRatingComparison(elementId, current, previous) {
+            const element = document.getElementById(elementId);
+            
+            if (current === 0 && previous === 0) {
+                element.textContent = 'No data';
+                element.style.color = 'var(--medium-gray)';
                 return;
             }
             
-            const days = parseInt(currentTimePeriod);
-            const currentPeriodStart = new Date();
-            currentPeriodStart.setDate(currentPeriodStart.getDate() - days);
+            if (previous === 0) {
+                element.textContent = 'New';
+                element.style.color = 'var(--success)';
+                return;
+            }
             
-            const previousPeriodStart = new Date();
-            previousPeriodStart.setDate(previousPeriodStart.getDate() - (days * 2));
+            const difference = current - previous;
+            const sign = difference >= 0 ? '+' : '';
             
-            // Filter reviews for current and previous periods
-            const currentReviews = reviews.filter(review => {
-                const reviewDate = new Date(review.date);
-                return reviewDate >= currentPeriodStart;
-            });
+            element.textContent = `${sign}${difference.toFixed(1)}`;
             
-            const previousReviews = reviews.filter(review => {
-                const reviewDate = new Date(review.date);
-                return reviewDate >= previousPeriodStart && reviewDate < currentPeriodStart;
-            });
-            
-            // Calculate current period averages
-            const currentTotalAvg = calculateAverageRating(currentReviews);
-            const currentPlayStoreAvg = calculateAverageRating(currentReviews.filter(r => r.source === 'google_play'));
-            const currentAppStoreAvg = calculateAverageRating(currentReviews.filter(r => r.source === 'app_store'));
-            
-            // Calculate previous period averages
-            const previousTotalAvg = calculateAverageRating(previousReviews);
-            const previousPlayStoreAvg = calculateAverageRating(previousReviews.filter(r => r.source === 'google_play'));
-            const previousAppStoreAvg = calculateAverageRating(previousReviews.filter(r => r.source === 'app_store'));
-            
-            // Update trend charts
-            updateSingleRatingTrend('total-rating-trend', currentTotalAvg, previousTotalAvg);
-            updateSingleRatingTrend('playstore-rating-trend', currentPlayStoreAvg, previousPlayStoreAvg);
-            updateSingleRatingTrend('appstore-rating-trend', currentAppStoreAvg, previousAppStoreAvg);
+            if (difference > 0.1) {
+                element.style.color = 'var(--success)'; // Green for improvement
+            } else if (difference < -0.1) {
+                element.style.color = 'var(--danger)'; // Red for decline
+            } else {
+                element.style.color = 'var(--medium-gray)'; // Gray for no significant change
+            }
         }
-        
-        // Calculate average rating for a set of reviews
-        function calculateAverageRating(reviews) {
-            const reviewsWithRating = reviews.filter(r => {
-                const rating = parseFloat(r.rating);
-                return !isNaN(rating) && rating > 0 && rating <= 5;
-            });
-            
-            if (reviewsWithRating.length === 0) return 0;
-            
-            const avg = reviewsWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviewsWithRating.length;
-            return Math.round(avg * 10) / 10;
-        }
-        
-        // Update a single rating trend chart
-        function updateSingleRatingTrend(containerId, currentAvg, previousAvg) {
-            console.log(`updateSingleRatingTrend: ${containerId}, current: ${currentAvg}, previous: ${previousAvg}`);
+
+        // Update rating trend preview (monthly data for 6 months)
+        function updateRatingTrendPreview(containerId, reviews, sourceType) {
+            console.log(`updateRatingTrendPreview: ${containerId}, source: ${sourceType}`);
             const container = document.getElementById(containerId);
             
-            if (currentAvg === 0 || previousAvg === 0) {
-                console.log(`Skipping trend chart for ${containerId} - no data`);
+            // Filter reviews by source type
+            let filteredReviews = reviews;
+            if (sourceType !== 'total') {
+                filteredReviews = reviews.filter(r => r.source === sourceType);
+            }
+            
+            if (filteredReviews.length === 0) {
                 container.innerHTML = '';
                 return;
             }
             
-            // Create simple trend data (2 points: previous and current)
-            const trendData = [
-                { x: 0, y: previousAvg },
-                { x: 1, y: currentAvg }
-            ];
+            // Generate monthly data for last 6 months
+            const monthlyData = generateMonthlyRatingData(filteredReviews, 6);
             
-            // Determine trend direction and color
-            const isIncreasing = currentAvg > previousAvg;
-            const isDecreasing = currentAvg < previousAvg;
-            const trendColor = isIncreasing ? '#28a745' : isDecreasing ? '#dc3545' : '#6c757d';
+            if (monthlyData.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
             
-            // Create mini chart using Plotly
+            // Create mini chart
             const trace = {
-                x: trendData.map(d => d.x),
-                y: trendData.map(d => d.y),
+                x: monthlyData.map(d => d.month),
+                y: monthlyData.map(d => d.avgRating),
                 type: 'scatter',
                 mode: 'lines+markers',
                 line: {
-                    color: trendColor,
+                    color: '#007bff',
                     width: 2
                 },
                 marker: {
-                    size: 4,
-                    color: trendColor
+                    size: 3,
+                    color: '#007bff'
                 },
                 showlegend: false,
                 hoverinfo: 'skip'
@@ -1994,6 +1986,56 @@
             };
             
             Plotly.newPlot(container, [trace], layout, config);
+        }
+        
+        // Generate monthly rating data for the last N months
+        function generateMonthlyRatingData(reviews, months) {
+            const monthlyRatings = {};
+            
+            // Initialize last N months
+            for (let i = months - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                monthlyRatings[monthKey] = { total: 0, count: 0, avgRating: 0 };
+            }
+            
+            // Process reviews
+            reviews.forEach(review => {
+                const reviewDate = new Date(review.date);
+                const monthKey = `${reviewDate.getFullYear()}-${(reviewDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                
+                if (monthlyRatings[monthKey]) {
+                    const rating = parseFloat(review.rating);
+                    if (!isNaN(rating) && rating > 0 && rating <= 5) {
+                        monthlyRatings[monthKey].total += rating;
+                        monthlyRatings[monthKey].count += 1;
+                    }
+                }
+            });
+            
+            // Calculate averages and format for chart
+            const data = Object.entries(monthlyRatings)
+                .map(([month, data]) => ({
+                    month: month.substring(5), // Just the month part (MM)
+                    avgRating: data.count > 0 ? Math.round((data.total / data.count) * 10) / 10 : 0
+                }))
+                .filter(d => d.avgRating > 0); // Only include months with data
+            
+            return data;
+        }
+
+        // Calculate average rating for a set of reviews
+        function calculateAverageRating(reviews) {
+            const reviewsWithRating = reviews.filter(r => {
+                const rating = parseFloat(r.rating);
+                return !isNaN(rating) && rating > 0 && rating <= 5;
+            });
+            
+            if (reviewsWithRating.length === 0) return 0;
+            
+            const avg = reviewsWithRating.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviewsWithRating.length;
+            return Math.round(avg * 10) / 10;
         }
 
         function updateAdvancedAnalytics(reviews) {
