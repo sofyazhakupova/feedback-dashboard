@@ -1090,6 +1090,7 @@
                         <h4 class="mb-0" style="font-weight: 300;">
                             <i class="fas fa-cog me-2"></i>
                             Data Sources Management
+                            <span class="badge bg-secondary ms-2" id="sources-count">0</span>
                         </h4>
                         <p style="color: var(--medium-gray);">Configure and manage your data sources</p>
                     </div>
@@ -1469,6 +1470,14 @@
             const savedKeywords = localStorage.getItem('appReviewScraper_keywords');
             if (savedKeywords) {
                 customKeywords = JSON.parse(savedKeywords);
+            }
+
+            // Clean up any existing duplicates
+            const originalCount = allReviews.length;
+            allReviews = removeDuplicateReviews(allReviews);
+            if (originalCount !== allReviews.length) {
+                console.log(`Removed ${originalCount - allReviews.length} duplicate reviews on startup`);
+                saveToStorage(); // Save the cleaned data
             }
 
             // Update UI with loaded data
@@ -2154,18 +2163,34 @@
                             return;
                         }
 
+                        // Check for duplicates
+                        const duplicateCheck = detectDuplicates(validation.validReviews, allReviews);
+                        
+                        if (duplicateCheck.duplicates.length > 0) {
+                            const proceed = confirm(
+                                `Found ${duplicateCheck.duplicates.length} duplicate reviews that already exist in the system.\n\n` +
+                                `• ${duplicateCheck.unique.length} new unique reviews will be added\n` +
+                                `• ${duplicateCheck.duplicates.length} duplicate reviews will be skipped\n\n` +
+                                `Do you want to continue and add only the unique reviews?`
+                            );
+                            
+                            if (!proceed) {
+                                return;
+                            }
+                        }
+
                         // Add valid reviews to data sources
                         const newSource = {
                             id: Date.now(),
                             name: sourceName,
                             type: sourceType,
                             description: description,
-                            data: validation.validReviews,
+                            data: duplicateCheck.unique,
                             createdAt: new Date().toISOString()
                         };
 
                         dataSources.push(newSource);
-                        allReviews = allReviews.concat(validation.validReviews);
+                        allReviews = allReviews.concat(duplicateCheck.unique);
 
                         // Save to localStorage
                         saveToStorage();
@@ -2192,7 +2217,11 @@
                             pendingReviews = pendingReviews.concat(validation.problematicReviews);
                             showReviewModal(validation.problematicReviews, sourceName);
                         } else {
-                            alert(`✅ Successfully loaded ${validation.validReviews.length} reviews from "${sourceName}". All reviews were automatically processed.`);
+                            let message = `✅ Successfully loaded ${duplicateCheck.unique.length} reviews from "${sourceName}". All reviews were automatically processed.`;
+                            if (duplicateCheck.duplicates.length > 0) {
+                                message += `\n\n📝 Note: ${duplicateCheck.duplicates.length} duplicate reviews were automatically skipped.`;
+                            }
+                            alert(message);
                         }
 
                     } catch (error) {
@@ -2455,7 +2484,10 @@
         }
 
         function updateSourceCount() {
-            document.getElementById('sources-count').textContent = dataSources.length;
+            const sourcesCountElement = document.getElementById('sources-count');
+            if (sourcesCountElement) {
+                sourcesCountElement.textContent = dataSources.length;
+            }
         }
 
         function updateSourceList() {
@@ -2640,14 +2672,21 @@
         }
 
         function removeSource(sourceId) {
-            if (confirm('Are you sure you want to remove this data source?')) {
+            if (confirm('Are you sure you want to remove this data source? All reviews from this source will also be deleted.')) {
                 const sourceIndex = dataSources.findIndex(s => s.id === sourceId);
                 if (sourceIndex !== -1) {
                     const source = dataSources[sourceIndex];
+                    
+                    // Remove reviews from this source by comparing review objects
+                    const sourceReviewIds = new Set(source.data.map(r => JSON.stringify(r)));
+                    allReviews = allReviews.filter(r => !sourceReviewIds.has(JSON.stringify(r)));
+                    
+                    // Remove the source
                     dataSources.splice(sourceIndex, 1);
                     
-                    // Remove reviews from this source
-                    allReviews = allReviews.filter(r => !source.data.includes(r));
+                    // Also remove from pending and reviewed reviews
+                    pendingReviews = pendingReviews.filter(r => !sourceReviewIds.has(JSON.stringify(r)));
+                    reviewedReviews = reviewedReviews.filter(r => !sourceReviewIds.has(JSON.stringify(r)));
                     
                     // Save to localStorage
                     saveToStorage();
@@ -2658,8 +2697,9 @@
                     updateDashboardMetrics(allReviews);
                     updateReviewsTable();
                     updateSourceFilter();
+                    updatePendingCount();
                     
-                    alert(`Removed ${source.name} and ${source.data.length} reviews`);
+                    alert(`✅ Data source "${source.name}" and its ${source.data.length} reviews have been removed successfully!`);
                 }
             }
         }
@@ -3451,6 +3491,47 @@
             keywords.push(...existingKeywords);
             
             return [...new Set(keywords)]; // Remove duplicates
+        }
+
+        // Duplicate review detection
+        function detectDuplicates(newReviews, existingReviews) {
+            const duplicates = [];
+            const unique = [];
+            
+            newReviews.forEach(newReview => {
+                const isDuplicate = existingReviews.some(existingReview => {
+                    // Check for duplicates based on content and date
+                    const sameContent = newReview.content && existingReview.content && 
+                                      newReview.content.toLowerCase().trim() === existingReview.content.toLowerCase().trim();
+                    const sameDate = newReview.date === existingReview.date;
+                    const sameAuthor = newReview.author && existingReview.author && 
+                                     newReview.author.toLowerCase().trim() === existingReview.author.toLowerCase().trim();
+                    
+                    return sameContent || (sameDate && sameAuthor && sameContent);
+                });
+                
+                if (isDuplicate) {
+                    duplicates.push(newReview);
+                } else {
+                    unique.push(newReview);
+                }
+            });
+            
+            return { duplicates, unique };
+        }
+
+        // Remove duplicates from existing reviews
+        function removeDuplicateReviews(reviews) {
+            const seen = new Set();
+            return reviews.filter(review => {
+                // Create a unique key based on content, date, and author
+                const key = `${review.content?.toLowerCase().trim() || ''}_${review.date || ''}_${review.author?.toLowerCase().trim() || ''}`;
+                if (seen.has(key)) {
+                    return false; // This is a duplicate
+                }
+                seen.add(key);
+                return true; // This is unique
+            });
         }
     </script>
 </body>
