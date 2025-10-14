@@ -1125,6 +1125,96 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Advantages Analysis -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-thumbs-up me-2"></i>
+                                        Advantages Analysis
+                                    </h6>
+                                    <small class="text-muted">What users appreciate and love about your app</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">Feature Strengths:</h6>
+                                            <div id="featureAdvantages" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze advantages</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-primary">Performance Strengths:</h6>
+                                            <div id="performanceAdvantages" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze advantages</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-info">User Experience Strengths:</h6>
+                                            <div id="uxAdvantages" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze advantages</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-warning">Competitive Advantages:</h6>
+                                            <div id="competitiveAdvantages" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze advantages</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Requests Analysis -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-lightbulb me-2"></i>
+                                        Feature Requests Analysis
+                                    </h6>
+                                    <small class="text-muted">What features users are missing and requesting</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-warning">High Priority Requests:</h6>
+                                            <div id="highPriorityRequests" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-info">Golf-Specific Requests:</h6>
+                                            <div id="golfSpecificRequests" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-primary">Platform Requests:</h6>
+                                            <div id="platformRequests" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-secondary">Integration Requests:</h6>
+                                            <div id="integrationRequests" class="mb-3">
+                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -2478,8 +2568,6 @@
                 </span>
             `;
             
-            if (allReviews.length === 0) return;
-            
             // Get all managed keywords from customKeywords
             const managedKeywords = [
                 ...customKeywords.competitors,
@@ -2487,27 +2575,30 @@
                 ...customKeywords.featureRequests
             ];
             
-            // Count keyword frequency for managed keywords only
+            if (managedKeywords.length === 0) {
+                keywordTags.innerHTML += '<span class="text-muted small">No keywords managed yet. Add keywords in Keywords tab.</span>';
+                return;
+            }
+            
+            // Count keyword frequency for ALL managed keywords (including 0 mentions)
             const keywordCounts = {};
+            managedKeywords.forEach(keyword => {
+                keywordCounts[keyword] = 0; // Initialize all to 0
+            });
+            
+            // Count actual mentions
             allReviews.forEach(review => {
-                const keywords = extractKeywordsWithCustom(review.content);
-                keywords.forEach(keyword => {
-                    // Only count if it's a managed keyword
-                    if (managedKeywords.some(managed => managed.toLowerCase() === keyword.toLowerCase())) {
+                const content = review.content?.toLowerCase() || '';
+                managedKeywords.forEach(keyword => {
+                    if (content.includes(keyword.toLowerCase())) {
                         keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
                     }
                 });
             });
             
-            if (Object.keys(keywordCounts).length === 0) {
-                keywordTags.innerHTML += '<span class="text-muted small">No managed keywords found in reviews</span>';
-                return;
-            }
-            
-            // Sort by frequency and take top 20
+            // Sort by frequency (highest first) but show ALL keywords
             const sortedKeywords = Object.entries(keywordCounts)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 20);
+                .sort(([,a], [,b]) => b - a);
             
             sortedKeywords.forEach(([keyword, count]) => {
                 const badge = document.createElement('span');
@@ -3404,6 +3495,12 @@
             // Update pain points analysis
             updatePainPointsAnalysis();
             
+            // Update advantages analysis
+            updateAdvantagesAnalysis();
+            
+            // Update feature requests analysis
+            updateFeatureRequestsAnalysis();
+            
             // Update filters in other tabs
             updateKeywordFilters();
         }
@@ -3700,6 +3797,292 @@
             ).join('');
 
             container.innerHTML = painPointHTML;
+        }
+
+        // Update advantages analysis
+        function updateAdvantagesAnalysis() {
+            if (allReviews.length === 0) {
+                document.getElementById('featureAdvantages').innerHTML = '<p class="text-muted small">Upload reviews to analyze advantages</p>';
+                document.getElementById('performanceAdvantages').innerHTML = '<p class="text-muted small">Upload reviews to analyze advantages</p>';
+                document.getElementById('uxAdvantages').innerHTML = '<p class="text-muted small">Upload reviews to analyze advantages</p>';
+                document.getElementById('competitiveAdvantages').innerHTML = '<p class="text-muted small">Upload reviews to analyze advantages</p>';
+                return;
+            }
+
+            const advantages = analyzeAdvantages(allReviews);
+            
+            // Update Feature Strengths
+            updateAdvantageContainer('featureAdvantages', advantages.features, 'success');
+            
+            // Update Performance Strengths
+            updateAdvantageContainer('performanceAdvantages', advantages.performance, 'primary');
+            
+            // Update UX Strengths
+            updateAdvantageContainer('uxAdvantages', advantages.ux, 'info');
+            
+            // Update Competitive Advantages
+            updateAdvantageContainer('competitiveAdvantages', advantages.competitive, 'warning');
+        }
+
+        // Analyze advantages from reviews
+        function analyzeAdvantages(reviews) {
+            const advantages = {
+                features: {},
+                performance: {},
+                ux: {},
+                competitive: {}
+            };
+
+            // Define advantage patterns
+            const featurePatterns = [
+                /(gps.*?(accurate|precise|spot on|perfect|excellent|amazing|incredible|fantastic))/gi,
+                /(yardage.*?(accurate|precise|spot on|perfect|excellent|amazing|incredible|fantastic))/gi,
+                /(scorecard.*?(great|excellent|amazing|incredible|fantastic|perfect|wonderful))/gi,
+                /(handicap.*?(accurate|precise|spot on|perfect|excellent|amazing|incredible|fantastic))/gi,
+                /(weather.*?(accurate|precise|spot on|perfect|excellent|amazing|incredible|fantastic))/gi
+            ];
+
+            const performancePatterns = [
+                /(fast|quick|speedy|responsive|smooth|efficient|reliable|stable)/gi,
+                /(battery.*?(good|great|excellent|amazing|incredible|fantastic|lasts long))/gi,
+                /(signal.*?(strong|excellent|amazing|incredible|fantastic|perfect))/gi,
+                /(loading.*?(fast|quick|speedy|instant|immediate))/gi
+            ];
+
+            const uxPatterns = [
+                /(easy to use|user friendly|intuitive|simple|clear|straightforward)/gi,
+                /(interface.*?(great|excellent|amazing|incredible|fantastic|perfect|beautiful))/gi,
+                /(design.*?(great|excellent|amazing|incredible|fantastic|perfect|beautiful))/gi,
+                /(navigation.*?(great|excellent|amazing|incredible|fantastic|perfect|smooth))/gi
+            ];
+
+            const competitivePatterns = [
+                /(better than|superior to|outperforms|beats|exceeds)/gi,
+                /(best.*?(golf app|app|gps|scorecard|handicap))/gi,
+                /(love.*?(this app|the app|it|everything))/gi,
+                /(recommend.*?(this app|the app|it|to everyone))/gi
+            ];
+
+            reviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                const rating = parseFloat(review.rating) || 0;
+                
+                // Only analyze positive reviews (rating >= 4) or reviews with positive sentiment
+                if (rating >= 4 || content.includes('great') || content.includes('excellent') || content.includes('amazing') || content.includes('love')) {
+                    
+                    // Feature Advantages
+                    featurePatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                advantages.features[key] = (advantages.features[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Performance Advantages
+                    performancePatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                advantages.performance[key] = (advantages.performance[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // UX Advantages
+                    uxPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                advantages.ux[key] = (advantages.ux[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Competitive Advantages
+                    competitivePatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                advantages.competitive[key] = (advantages.competitive[key] || 0) + 1;
+                            });
+                        }
+                    });
+                }
+            });
+
+            return advantages;
+        }
+
+        // Update feature requests analysis
+        function updateFeatureRequestsAnalysis() {
+            if (allReviews.length === 0) {
+                document.getElementById('highPriorityRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
+                document.getElementById('golfSpecificRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
+                document.getElementById('platformRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
+                document.getElementById('integrationRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
+                return;
+            }
+
+            const requests = analyzeFeatureRequests(allReviews);
+            
+            // Update High Priority Requests
+            updateRequestContainer('highPriorityRequests', requests.highPriority, 'warning');
+            
+            // Update Golf-Specific Requests
+            updateRequestContainer('golfSpecificRequests', requests.golfSpecific, 'info');
+            
+            // Update Platform Requests
+            updateRequestContainer('platformRequests', requests.platform, 'primary');
+            
+            // Update Integration Requests
+            updateRequestContainer('integrationRequests', requests.integration, 'secondary');
+        }
+
+        // Analyze feature requests from reviews
+        function analyzeFeatureRequests(reviews) {
+            const requests = {
+                highPriority: {},
+                golfSpecific: {},
+                platform: {},
+                integration: {}
+            };
+
+            // Define request patterns
+            const highPriorityPatterns = [
+                /(need.*?(urgent|desperately|badly|immediately|now))/gi,
+                /(must have|essential|critical|important|vital)/gi,
+                /(please.*?(add|implement|fix|include))/gi,
+                /(really.*?(need|want|wish|hope))/gi
+            ];
+
+            const golfSpecificPatterns = [
+                /(need.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi,
+                /(want.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi,
+                /(missing.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi,
+                /(add.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi
+            ];
+
+            const platformPatterns = [
+                /(need.*?(apple watch|android wear|smartwatch|watch))/gi,
+                /(want.*?(apple watch|android wear|smartwatch|watch))/gi,
+                /(add.*?(apple watch|android wear|smartwatch|watch))/gi,
+                /(dark mode|night mode|offline mode|sync)/gi
+            ];
+
+            const integrationPatterns = [
+                /(integrate.*?(with|to))/gi,
+                /(connect.*?(to|with))/gi,
+                /(sync.*?(with|to))/gi,
+                /(import.*?(from|to))/gi,
+                /(export.*?(to|from))/gi
+            ];
+
+            reviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                
+                // Look for request language
+                if (content.includes('need') || content.includes('want') || content.includes('wish') || 
+                    content.includes('add') || content.includes('missing') || content.includes('please')) {
+                    
+                    // High Priority Requests
+                    highPriorityPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                requests.highPriority[key] = (requests.highPriority[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Golf-Specific Requests
+                    golfSpecificPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                requests.golfSpecific[key] = (requests.golfSpecific[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Platform Requests
+                    platformPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                requests.platform[key] = (requests.platform[key] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Integration Requests
+                    integrationPatterns.forEach(pattern => {
+                        const matches = content.match(pattern);
+                        if (matches) {
+                            matches.forEach(match => {
+                                const key = match.toLowerCase().trim();
+                                requests.integration[key] = (requests.integration[key] || 0) + 1;
+                            });
+                        }
+                    });
+                }
+            });
+
+            return requests;
+        }
+
+        // Update advantage container
+        function updateAdvantageContainer(containerId, advantages, badgeClass) {
+            const container = document.getElementById(containerId);
+            
+            if (Object.keys(advantages).length === 0) {
+                container.innerHTML = '<p class="text-muted small">No advantages found in this category</p>';
+                return;
+            }
+
+            // Sort by frequency and take top 10
+            const sortedAdvantages = Object.entries(advantages)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+
+            const advantageHTML = sortedAdvantages.map(([advantage, count]) => 
+                `<span class="badge bg-${badgeClass} me-1 mb-1" title="${count} mentions">
+                    ${advantage} (${count})
+                </span>`
+            ).join('');
+
+            container.innerHTML = advantageHTML;
+        }
+
+        // Update request container
+        function updateRequestContainer(containerId, requests, badgeClass) {
+            const container = document.getElementById(containerId);
+            
+            if (Object.keys(requests).length === 0) {
+                container.innerHTML = '<p class="text-muted small">No requests found in this category</p>';
+                return;
+            }
+
+            // Sort by frequency and take top 10
+            const sortedRequests = Object.entries(requests)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+
+            const requestHTML = sortedRequests.map(([request, count]) => 
+                `<span class="badge bg-${badgeClass} me-1 mb-1" title="${count} mentions">
+                    ${request} (${count})
+                </span>`
+            ).join('');
+
+            container.innerHTML = requestHTML;
         }
 
         // Update keyword filters in Reviews List tab
