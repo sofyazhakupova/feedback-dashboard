@@ -1171,50 +1171,6 @@
                         </div>
                     </div>
 
-                    <!-- Feature Requests Analysis -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-lightbulb me-2"></i>
-                                        Feature Requests Analysis
-                                    </h6>
-                                    <small class="text-muted">What features users are missing and requesting</small>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6 class="text-warning">High Priority Requests:</h6>
-                                            <div id="highPriorityRequests" class="mb-3">
-                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6 class="text-info">Golf-Specific Requests:</h6>
-                                            <div id="golfSpecificRequests" class="mb-3">
-                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6 class="text-primary">Platform Requests:</h6>
-                                            <div id="platformRequests" class="mb-3">
-                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6 class="text-secondary">Integration Requests:</h6>
-                                            <div id="integrationRequests" class="mb-3">
-                                                <p class="text-muted small">Upload reviews to analyze feature requests</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1908,15 +1864,33 @@
         }
 
         function updatePainPointsList(reviews) {
-            const painPoints = extractPainPoints(reviews);
             const container = document.getElementById('painPointsList');
             
-            if (painPoints.length === 0) {
+            if (reviews.length === 0) {
+                container.innerHTML = '<p class="text-muted">No pain points identified</p>';
+                return;
+            }
+
+            const painPoints = analyzePainPoints(reviews);
+            
+            // Combine all pain points and sort by frequency
+            const allPainPoints = [];
+            Object.entries(painPoints.critical).forEach(([text, count]) => allPainPoints.push({text, count, category: 'Critical'}));
+            Object.entries(painPoints.features).forEach(([text, count]) => allPainPoints.push({text, count, category: 'Feature'}));
+            Object.entries(painPoints.performance).forEach(([text, count]) => allPainPoints.push({text, count, category: 'Performance'}));
+            Object.entries(painPoints.ux).forEach(([text, count]) => allPainPoints.push({text, count, category: 'UX'}));
+            
+            // Sort by frequency and take top 10
+            const sortedPainPoints = allPainPoints
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+            
+            if (sortedPainPoints.length === 0) {
                 container.innerHTML = '<p class="text-muted">No pain points identified</p>';
                 return;
             }
             
-            const list = painPoints.slice(0, 10).map((item, index) => `
+            const list = sortedPainPoints.map((item, index) => `
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="me-2">${index + 1}.</span>
                     <span class="flex-grow-1">${item.text}</span>
@@ -1928,15 +1902,33 @@
         }
 
         function updateAdvantagesList(reviews) {
-            const advantages = extractAdvantages(reviews);
             const container = document.getElementById('advantagesList');
             
-            if (advantages.length === 0) {
+            if (reviews.length === 0) {
+                container.innerHTML = '<p class="text-muted">No advantages identified</p>';
+                return;
+            }
+
+            const advantages = analyzeAdvantages(reviews);
+            
+            // Combine all advantages and sort by frequency
+            const allAdvantages = [];
+            Object.entries(advantages.features).forEach(([text, count]) => allAdvantages.push({text, count, category: 'Feature'}));
+            Object.entries(advantages.performance).forEach(([text, count]) => allAdvantages.push({text, count, category: 'Performance'}));
+            Object.entries(advantages.ux).forEach(([text, count]) => allAdvantages.push({text, count, category: 'UX'}));
+            Object.entries(advantages.competitive).forEach(([text, count]) => allAdvantages.push({text, count, category: 'Competitive'}));
+            
+            // Sort by frequency and take top 10
+            const sortedAdvantages = allAdvantages
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+            
+            if (sortedAdvantages.length === 0) {
                 container.innerHTML = '<p class="text-muted">No advantages identified</p>';
                 return;
             }
             
-            const list = advantages.slice(0, 10).map((item, index) => `
+            const list = sortedAdvantages.map((item, index) => `
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="me-2">${index + 1}.</span>
                     <span class="flex-grow-1">${item.text}</span>
@@ -1948,19 +1940,52 @@
         }
 
         function updateRequestedFeaturesList(reviews) {
-            const features = extractRequestedFeatures(reviews);
             const container = document.getElementById('requestedFeaturesList');
             
-            if (features.length === 0) {
+            if (reviews.length === 0) {
                 container.innerHTML = '<p class="text-muted">No feature requests identified</p>';
                 return;
             }
+
+            // Use the existing feature requests from keywords manager
+            const featureRequests = customKeywords.featureRequests || [];
             
-            const list = features.slice(0, 10).map((item, index) => `
+            if (featureRequests.length === 0) {
+                container.innerHTML = '<p class="text-muted">No feature requests configured</p>';
+                return;
+            }
+
+            // Count mentions of each feature request in reviews
+            const requestCounts = {};
+            featureRequests.forEach(request => {
+                requestCounts[request] = 0;
+            });
+
+            reviews.forEach(review => {
+                const content = review.content?.toLowerCase() || '';
+                featureRequests.forEach(request => {
+                    if (content.includes(request.toLowerCase())) {
+                        requestCounts[request] = (requestCounts[request] || 0) + 1;
+                    }
+                });
+            });
+
+            // Sort by frequency and take top 10
+            const sortedRequests = Object.entries(requestCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10)
+                .filter(([,count]) => count > 0); // Only show requests that were mentioned
+            
+            if (sortedRequests.length === 0) {
+                container.innerHTML = '<p class="text-muted">No feature requests mentioned in reviews</p>';
+                return;
+            }
+            
+            const list = sortedRequests.map(([request, count], index) => `
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="me-2">${index + 1}.</span>
-                    <span class="flex-grow-1">${item.text}</span>
-                    <span class="badge bg-warning text-dark">${item.count}</span>
+                    <span class="flex-grow-1">${request}</span>
+                    <span class="badge bg-warning text-dark">${count}</span>
                 </div>
             `).join('');
             
@@ -3498,9 +3523,6 @@
             // Update advantages analysis
             updateAdvantagesAnalysis();
             
-            // Update feature requests analysis
-            updateFeatureRequestsAnalysis();
-            
             // Update filters in other tabs
             updateKeywordFilters();
         }
@@ -3919,125 +3941,7 @@
             return advantages;
         }
 
-        // Update feature requests analysis
-        function updateFeatureRequestsAnalysis() {
-            if (allReviews.length === 0) {
-                document.getElementById('highPriorityRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
-                document.getElementById('golfSpecificRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
-                document.getElementById('platformRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
-                document.getElementById('integrationRequests').innerHTML = '<p class="text-muted small">Upload reviews to analyze feature requests</p>';
-                return;
-            }
 
-            const requests = analyzeFeatureRequests(allReviews);
-            
-            // Update High Priority Requests
-            updateRequestContainer('highPriorityRequests', requests.highPriority, 'warning');
-            
-            // Update Golf-Specific Requests
-            updateRequestContainer('golfSpecificRequests', requests.golfSpecific, 'info');
-            
-            // Update Platform Requests
-            updateRequestContainer('platformRequests', requests.platform, 'primary');
-            
-            // Update Integration Requests
-            updateRequestContainer('integrationRequests', requests.integration, 'secondary');
-        }
-
-        // Analyze feature requests from reviews
-        function analyzeFeatureRequests(reviews) {
-            const requests = {
-                highPriority: {},
-                golfSpecific: {},
-                platform: {},
-                integration: {}
-            };
-
-            // Define request patterns
-            const highPriorityPatterns = [
-                /(need.*?(urgent|desperately|badly|immediately|now))/gi,
-                /(must have|essential|critical|important|vital)/gi,
-                /(please.*?(add|implement|fix|include))/gi,
-                /(really.*?(need|want|wish|hope))/gi
-            ];
-
-            const golfSpecificPatterns = [
-                /(need.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi,
-                /(want.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi,
-                /(missing.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi,
-                /(add.*?(handicap|gps|yardage|scorecard|weather|course|tee time))/gi
-            ];
-
-            const platformPatterns = [
-                /(need.*?(apple watch|android wear|smartwatch|watch))/gi,
-                /(want.*?(apple watch|android wear|smartwatch|watch))/gi,
-                /(add.*?(apple watch|android wear|smartwatch|watch))/gi,
-                /(dark mode|night mode|offline mode|sync)/gi
-            ];
-
-            const integrationPatterns = [
-                /(integrate.*?(with|to))/gi,
-                /(connect.*?(to|with))/gi,
-                /(sync.*?(with|to))/gi,
-                /(import.*?(from|to))/gi,
-                /(export.*?(to|from))/gi
-            ];
-
-            reviews.forEach(review => {
-                const content = review.content?.toLowerCase() || '';
-                
-                // Look for request language
-                if (content.includes('need') || content.includes('want') || content.includes('wish') || 
-                    content.includes('add') || content.includes('missing') || content.includes('please')) {
-                    
-                    // High Priority Requests
-                    highPriorityPatterns.forEach(pattern => {
-                        const matches = content.match(pattern);
-                        if (matches) {
-                            matches.forEach(match => {
-                                const key = match.toLowerCase().trim();
-                                requests.highPriority[key] = (requests.highPriority[key] || 0) + 1;
-                            });
-                        }
-                    });
-
-                    // Golf-Specific Requests
-                    golfSpecificPatterns.forEach(pattern => {
-                        const matches = content.match(pattern);
-                        if (matches) {
-                            matches.forEach(match => {
-                                const key = match.toLowerCase().trim();
-                                requests.golfSpecific[key] = (requests.golfSpecific[key] || 0) + 1;
-                            });
-                        }
-                    });
-
-                    // Platform Requests
-                    platformPatterns.forEach(pattern => {
-                        const matches = content.match(pattern);
-                        if (matches) {
-                            matches.forEach(match => {
-                                const key = match.toLowerCase().trim();
-                                requests.platform[key] = (requests.platform[key] || 0) + 1;
-                            });
-                        }
-                    });
-
-                    // Integration Requests
-                    integrationPatterns.forEach(pattern => {
-                        const matches = content.match(pattern);
-                        if (matches) {
-                            matches.forEach(match => {
-                                const key = match.toLowerCase().trim();
-                                requests.integration[key] = (requests.integration[key] || 0) + 1;
-                            });
-                        }
-                    });
-                }
-            });
-
-            return requests;
-        }
 
         // Update advantage container
         function updateAdvantageContainer(containerId, advantages, badgeClass) {
@@ -4062,28 +3966,6 @@
             container.innerHTML = advantageHTML;
         }
 
-        // Update request container
-        function updateRequestContainer(containerId, requests, badgeClass) {
-            const container = document.getElementById(containerId);
-            
-            if (Object.keys(requests).length === 0) {
-                container.innerHTML = '<p class="text-muted small">No requests found in this category</p>';
-                return;
-            }
-
-            // Sort by frequency and take top 10
-            const sortedRequests = Object.entries(requests)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 10);
-
-            const requestHTML = sortedRequests.map(([request, count]) => 
-                `<span class="badge bg-${badgeClass} me-1 mb-1" title="${count} mentions">
-                    ${request} (${count})
-                </span>`
-            ).join('');
-
-            container.innerHTML = requestHTML;
-        }
 
         // Update keyword filters in Reviews List tab
         function updateKeywordFilters() {
@@ -4095,6 +3977,9 @@
             
             // Update keywords cloud in Dashboard
             updateKeywordsCloud(allReviews);
+            
+            // Update Dashboard analytics with new keyword analysis
+            updateAdvancedAnalytics(allReviews);
         }
 
         // Enhanced keyword extraction using custom keywords
