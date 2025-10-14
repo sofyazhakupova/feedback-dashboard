@@ -1610,6 +1610,10 @@
             updatePendingCount();
             updateSourceList();
             updateSourceCount();
+            
+            // Update keyword trends chart
+            updateKeywordTrends();
+            
             console.log('UI update completed');
         }
 
@@ -2464,7 +2468,9 @@
         // Get current global time period
         function getCurrentTimePeriod() {
             const selectedPeriod = document.querySelector('input[name="timePeriod"]:checked');
-            return selectedPeriod ? selectedPeriod.value : '30';
+            const value = selectedPeriod ? selectedPeriod.value : '0'; // Default to "All time"
+            console.log(`Current time period: ${value}`);
+            return value;
         }
 
         // Get current step size based on time period
@@ -2503,26 +2509,40 @@
             
             // Get filtered reviews based on global time period
             let filteredReviews = allReviews;
-            if (timePeriod !== 'all') {
+            console.log(`Keyword trends - Total reviews: ${allReviews.length}, Time period: ${timePeriod}`);
+            
+            if (timePeriod !== 'all' && timePeriod !== '0') {
                 const days = parseInt(timePeriod);
                 const cutoffDate = new Date();
                 cutoffDate.setDate(cutoffDate.getDate() - days);
+                console.log(`Cutoff date: ${cutoffDate.toISOString()}`);
+                
                 filteredReviews = allReviews.filter(review => {
                     const reviewDate = new Date(review.date);
-                    return reviewDate >= cutoffDate;
+                    const isValid = reviewDate >= cutoffDate;
+                    if (!isValid) {
+                        console.log(`Review filtered out - Date: ${review.date}, Parsed: ${reviewDate.toISOString()}`);
+                    }
+                    return isValid;
                 });
+                console.log(`Filtered reviews: ${filteredReviews.length}`);
             }
             
             if (filteredReviews.length === 0) {
-                container.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
-                        <div class="text-center">
-                            <i class="fas fa-chart-line fa-3x mb-3"></i>
-                            <p>No reviews found for the selected time period</p>
+                console.log('No reviews found for selected time period, showing all reviews instead');
+                filteredReviews = allReviews; // Fallback to show all reviews
+                
+                if (filteredReviews.length === 0) {
+                    container.innerHTML = `
+                        <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                                <p>No reviews available</p>
+                            </div>
                         </div>
-                    </div>
-                `;
-                return;
+                    `;
+                    return;
+                }
             }
             
             // Group reviews by step size
@@ -2600,6 +2620,20 @@
             Plotly.newPlot(container, traces, layout, {responsive: true});
         }
         
+        // Helper function to get time period label
+        function getTimePeriodLabel(period) {
+            const labels = {
+                '7': 'Last 7 days',
+                '30': 'Last 30 days',
+                '90': 'Last 3 months',
+                '180': 'Last 6 months',
+                '365': 'Last year',
+                '0': 'All time',
+                'all': 'All time'
+            };
+            return labels[period] || 'All time';
+        }
+
         // Helper function to get step key based on step size
         function getStepKey(date, stepSize) {
             if (stepSize === 'day') {
@@ -2614,6 +2648,15 @@
                 return `${year}-${month.toString().padStart(2, '0')}`;
             }
             return date.toISOString().split('T')[0];
+        }
+
+        // Helper function to get week number
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         }
 
         function updateCharts(reviews) {
