@@ -711,6 +711,9 @@
                                             <button class="btn btn-sm btn-outline-primary" onclick="updateKeywordTrends()">
                                                 Update Chart
                                             </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="showKeywordsTab()" title="Manage Keywords">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -844,7 +847,12 @@
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Keyword Search</label>
+                            <label class="form-label">
+                                Keyword Search 
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="showKeywordsTab()" title="Manage Keywords">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </label>
                             <input type="text" class="form-control" id="keywordSearch" placeholder="Search keywords...">
                         </div>
                     </div>
@@ -870,12 +878,17 @@
                     <!-- Keyword Tags Cloud -->
                     <div class="row mt-3">
                         <div class="col-12">
-                            <label class="form-label">Quick Keyword Filters</label>
+                            <label class="form-label">
+                                Quick Keyword Filters 
+                                <button class="btn btn-sm btn-outline-primary ms-2" onclick="showKeywordsTab()" title="Manage Keywords">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </label>
                             <div id="keywordTags" class="mb-3">
                                 <span class="badge bg-light text-dark me-2 mb-2" style="cursor: pointer; border: 1px solid var(--light-gray);" onclick="addKeywordFilter('')">
                                     <i class="fas fa-times me-1"></i>Clear All
                                 </span>
-                                <!-- Keywords will be dynamically added here -->
+                                <!-- Managed keywords will be dynamically added here -->
                             </div>
                         </div>
                     </div>
@@ -1697,6 +1710,13 @@
         }
 
         function updateKeywordsCloud(reviews) {
+            // Get all managed keywords from customKeywords
+            const managedKeywords = [
+                ...customKeywords.competitors,
+                ...customKeywords.golfFeatures,
+                ...customKeywords.featureRequests
+            ];
+            
             const keywords = extractAllKeywords(reviews);
             const container = document.getElementById('keywordsCloud');
             
@@ -1705,12 +1725,23 @@
                 return;
             }
             
+            // Only show managed keywords that appear in reviews
+            const availableManagedKeywords = managedKeywords.filter(keyword => 
+                keywords.hasOwnProperty(keyword.toLowerCase())
+            );
+            
+            if (availableManagedKeywords.length === 0) {
+                container.innerHTML = '<p class="text-muted">No managed keywords found in reviews</p>';
+                return;
+            }
+            
             // Sort by frequency and take top 20
-            const sortedKeywords = Object.entries(keywords)
-                .sort(([,a], [,b]) => b - a)
+            const sortedKeywords = availableManagedKeywords
+                .map(keyword => ({ keyword, count: keywords[keyword.toLowerCase()] || 0 }))
+                .sort((a, b) => b.count - a.count)
                 .slice(0, 20);
             
-            const keywordCloud = sortedKeywords.map(([keyword, count], index) => {
+            const keywordCloud = sortedKeywords.map(({ keyword, count }, index) => {
                 let sizeClass = 'fs-7';
                 let badgeClass = 'bg-light text-dark';
                 
@@ -1885,18 +1916,30 @@
         }
 
         function updateKeywordSelector(reviews) {
-            const keywords = extractAllKeywords(reviews);
+            // Get all managed keywords from customKeywords
+            const managedKeywords = [
+                ...customKeywords.competitors,
+                ...customKeywords.golfFeatures,
+                ...customKeywords.featureRequests
+            ];
+            
             const selector = document.getElementById('keywordSelector');
             
             // Clear existing options except the first one
             selector.innerHTML = '<option value="">Select keywords...</option>';
             
-            // Add top 20 keywords as options
-            const sortedKeywords = Object.entries(keywords)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 20);
+            // Only show managed keywords that appear in reviews
+            const keywords = extractAllKeywords(reviews);
+            const availableManagedKeywords = managedKeywords.filter(keyword => 
+                keywords.hasOwnProperty(keyword.toLowerCase())
+            );
             
-            sortedKeywords.forEach(([keyword, count]) => {
+            // Sort by frequency in reviews
+            const sortedKeywords = availableManagedKeywords
+                .map(keyword => ({ keyword, count: keywords[keyword.toLowerCase()] || 0 }))
+                .sort((a, b) => b.count - a.count);
+            
+            sortedKeywords.forEach(({ keyword, count }) => {
                 const option = document.createElement('option');
                 option.value = keyword;
                 option.textContent = `${keyword} (${count})`;
@@ -2363,14 +2406,29 @@
             
             if (allReviews.length === 0) return;
             
-            // Count keyword frequency
+            // Get all managed keywords from customKeywords
+            const managedKeywords = [
+                ...customKeywords.competitors,
+                ...customKeywords.golfFeatures,
+                ...customKeywords.featureRequests
+            ];
+            
+            // Count keyword frequency for managed keywords only
             const keywordCounts = {};
             allReviews.forEach(review => {
-                const keywords = extractKeywords(review.content);
+                const keywords = extractKeywordsWithCustom(review.content);
                 keywords.forEach(keyword => {
-                    keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+                    // Only count if it's a managed keyword
+                    if (managedKeywords.some(managed => managed.toLowerCase() === keyword.toLowerCase())) {
+                        keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+                    }
                 });
             });
+            
+            if (Object.keys(keywordCounts).length === 0) {
+                keywordTags.innerHTML += '<span class="text-muted small">No managed keywords found in reviews</span>';
+                return;
+            }
             
             // Sort by frequency and take top 20
             const sortedKeywords = Object.entries(keywordCounts)
@@ -3210,6 +3268,15 @@
         // Keywords Manager Functions
         function showKeywordsManager() {
             loadKeywordsManager();
+        }
+
+        function showKeywordsTab() {
+            // Switch to Keywords tab
+            const keywordsTab = document.getElementById('keywords-tab');
+            if (keywordsTab) {
+                const tab = new bootstrap.Tab(keywordsTab);
+                tab.show();
+            }
         }
 
         function loadKeywordsManager() {
