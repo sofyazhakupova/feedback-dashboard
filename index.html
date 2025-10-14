@@ -1553,34 +1553,45 @@
 
         // Initialize data from localStorage on page load
         function initializeFromStorage() {
+            console.log('Initializing from storage...');
+            
             // Load all reviews
             const savedReviews = localStorage.getItem('appReviewScraper_reviews');
             if (savedReviews) {
                 allReviews = JSON.parse(savedReviews);
+                console.log(`Loaded ${allReviews.length} reviews from storage`);
+            } else {
+                console.log('No saved reviews found');
             }
 
             // Load data sources
             const savedSources = localStorage.getItem('appReviewScraper_sources');
             if (savedSources) {
                 dataSources = JSON.parse(savedSources);
+                console.log(`Loaded ${dataSources.length} data sources from storage`);
+            } else {
+                console.log('No saved data sources found');
             }
 
             // Load pending reviews
             const savedPending = localStorage.getItem('appReviewScraper_pending');
             if (savedPending) {
                 pendingReviews = JSON.parse(savedPending);
+                console.log(`Loaded ${pendingReviews.length} pending reviews from storage`);
             }
 
             // Load reviewed reviews
             const savedReviewed = localStorage.getItem('appReviewScraper_reviewed');
             if (savedReviewed) {
                 reviewedReviews = JSON.parse(savedReviewed);
+                console.log(`Loaded ${reviewedReviews.length} reviewed reviews from storage`);
             }
 
             // Load custom keywords
             const savedKeywords = localStorage.getItem('appReviewScraper_keywords');
             if (savedKeywords) {
                 customKeywords = JSON.parse(savedKeywords);
+                console.log('Loaded custom keywords from storage');
             }
 
             // Clean up any existing duplicates
@@ -1592,12 +1603,14 @@
             }
 
             // Update UI with loaded data
+            console.log('Updating UI with loaded data...');
             updateDashboardMetrics(allReviews);
             updateReviewsTable();
             updateSourceFilter();
             updatePendingCount();
             updateSourceList();
             updateSourceCount();
+            console.log('UI update completed');
         }
 
         // Save data to localStorage
@@ -1607,6 +1620,20 @@
             localStorage.setItem('appReviewScraper_pending', JSON.stringify(pendingReviews));
             localStorage.setItem('appReviewScraper_reviewed', JSON.stringify(reviewedReviews));
             localStorage.setItem('appReviewScraper_keywords', JSON.stringify(customKeywords));
+        }
+
+        // Check if there's any data in localStorage
+        function checkStorageData() {
+            const keys = ['appReviewScraper_reviews', 'appReviewScraper_sources', 'appReviewScraper_pending', 'appReviewScraper_reviewed', 'appReviewScraper_keywords'];
+            const data = {};
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                data[key] = value ? JSON.parse(value) : null;
+            });
+            
+            console.log('Storage data check:', data);
+            return data;
         }
 
         // Clear all stored data
@@ -1637,6 +1664,11 @@
 
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Starting initialization...');
+            
+            // Check what's in storage first
+            checkStorageData();
+            
             setupEventListeners();
             updateTime();
             initializeFromStorage(); // Load saved data
@@ -1650,6 +1682,8 @@
                     loadKeywordsManager();
                 });
             }
+            
+            console.log('Initialization completed');
         });
 
         function setupEventListeners() {
@@ -1816,23 +1850,21 @@
         }
 
         function updateAdvancedAnalytics(reviews) {
-            // Update keyword cloud
-            updateKeywordsCloud(reviews);
-            
-            // Update keywords list for trends
-            updateKeywordsList();
-            
-            // Update lists
-            updatePainPointsList(reviews);
-            updateAdvantagesList(reviews);
-            updateRequestedFeaturesList(reviews);
-            
-            // Update charts
-            updatePainPointsChart(reviews);
-            updateRequestedFeaturesChart(reviews);
-            
-            // Update keyword selector
-            updateKeywordSelector(reviews);
+            try {
+                // Update keywords list for trends
+                updateKeywordsList();
+                
+                // Update lists
+                updatePainPointsList(reviews);
+                updateAdvantagesList(reviews);
+                updateRequestedFeaturesList(reviews);
+                
+                // Update charts
+                updatePainPointsChart(reviews);
+                updateRequestedFeaturesChart(reviews);
+            } catch (error) {
+                console.error('Error updating advanced analytics:', error);
+            }
         }
 
         function updateKeywordsCloud(reviews) {
@@ -2249,123 +2281,141 @@
 
         // Update keywords list with checkboxes and pagination
         function updateKeywordsList() {
-            const container = document.getElementById('keywordsList');
-            const searchInput = document.getElementById('keywordSearchInput');
-            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-            
-            // Get all managed keywords from customKeywords
-            const managedKeywords = [
-                ...customKeywords.competitors,
-                ...customKeywords.golfFeatures,
-                ...customKeywords.featureRequests
-            ];
-            
-            if (managedKeywords.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center">No keywords managed yet. Add keywords in Keywords tab.</p>';
-                updateKeywordsPagination([]);
-                return;
-            }
-
-            // Count keyword frequency in reviews
-            const keywordCounts = {};
-            managedKeywords.forEach(keyword => {
-                keywordCounts[keyword] = 0;
-            });
-
-            allReviews.forEach(review => {
-                const content = review.content?.toLowerCase() || '';
-                managedKeywords.forEach(keyword => {
-                    if (content.includes(keyword.toLowerCase())) {
-                        keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
-                    }
-                });
-            });
-
-            // Filter keywords based on search term
-            const filteredKeywords = managedKeywords.filter(keyword => 
-                keyword.toLowerCase().includes(searchTerm)
-            );
-
-            // Sort by frequency
-            const sortedKeywords = filteredKeywords
-                .map(keyword => ({ keyword, count: keywordCounts[keyword] }))
-                .sort((a, b) => b.count - a.count);
-
-            // Update pagination
-            updateKeywordsPagination(sortedKeywords);
-
-            // Get keywords for current page
-            const startIndex = (currentKeywordsPage - 1) * keywordsPerPage;
-            const endIndex = startIndex + keywordsPerPage;
-            const pageKeywords = sortedKeywords.slice(startIndex, endIndex);
-
-            if (pageKeywords.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center">No keywords match your search.</p>';
-                return;
-            }
-
-            // Auto-select first 5 keywords on first page if none selected
-            if (currentKeywordsPage === 1 && selectedKeywordsForTrends.length === 0 && pageKeywords.length > 0) {
-                selectedKeywordsForTrends = pageKeywords.slice(0, 5).map(item => item.keyword);
-            }
-
-            // Create checkboxes
-            const checkboxesHTML = pageKeywords.map(({ keyword, count }) => {
-                const isSelected = selectedKeywordsForTrends.includes(keyword);
-                const isDisabled = !isSelected && selectedKeywordsForTrends.length >= 5;
+            try {
+                const container = document.getElementById('keywordsList');
+                if (!container) {
+                    console.log('Keywords list container not found, skipping update');
+                    return;
+                }
                 
-                return `
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="checkbox" 
-                               id="keyword-${keyword}" 
-                               value="${keyword}" 
-                               ${isSelected ? 'checked' : ''} 
-                               ${isDisabled ? 'disabled' : ''}
-                               onchange="toggleKeywordSelection('${keyword}')">
-                        <label class="form-check-label d-flex justify-content-between align-items-center" for="keyword-${keyword}">
-                            <span>${keyword}</span>
-                            <span class="badge bg-secondary">${count}</span>
-                        </label>
-                    </div>
-                `;
-            }).join('');
+                const searchInput = document.getElementById('keywordSearchInput');
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                
+                // Get all managed keywords from customKeywords
+                const managedKeywords = [
+                    ...customKeywords.competitors,
+                    ...customKeywords.golfFeatures,
+                    ...customKeywords.featureRequests
+                ];
+                
+                if (managedKeywords.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No keywords managed yet. Add keywords in Keywords tab.</p>';
+                    updateKeywordsPagination([]);
+                    return;
+                }
 
-            container.innerHTML = checkboxesHTML;
-            updateSelectedKeywordsCount();
+                // Count keyword frequency in reviews
+                const keywordCounts = {};
+                managedKeywords.forEach(keyword => {
+                    keywordCounts[keyword] = 0;
+                });
+
+                allReviews.forEach(review => {
+                    const content = review.content?.toLowerCase() || '';
+                    managedKeywords.forEach(keyword => {
+                        if (content.includes(keyword.toLowerCase())) {
+                            keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+                        }
+                    });
+                });
+
+                // Filter keywords based on search term
+                const filteredKeywords = managedKeywords.filter(keyword => 
+                    keyword.toLowerCase().includes(searchTerm)
+                );
+
+                // Sort by frequency
+                const sortedKeywords = filteredKeywords
+                    .map(keyword => ({ keyword, count: keywordCounts[keyword] }))
+                    .sort((a, b) => b.count - a.count);
+
+                // Update pagination
+                updateKeywordsPagination(sortedKeywords);
+
+                // Get keywords for current page
+                const startIndex = (currentKeywordsPage - 1) * keywordsPerPage;
+                const endIndex = startIndex + keywordsPerPage;
+                const pageKeywords = sortedKeywords.slice(startIndex, endIndex);
+
+                if (pageKeywords.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No keywords match your search.</p>';
+                    return;
+                }
+
+                // Auto-select first 5 keywords on first page if none selected
+                if (currentKeywordsPage === 1 && selectedKeywordsForTrends.length === 0 && pageKeywords.length > 0) {
+                    selectedKeywordsForTrends = pageKeywords.slice(0, 5).map(item => item.keyword);
+                }
+
+                // Create checkboxes
+                const checkboxesHTML = pageKeywords.map(({ keyword, count }) => {
+                    const isSelected = selectedKeywordsForTrends.includes(keyword);
+                    const isDisabled = !isSelected && selectedKeywordsForTrends.length >= 5;
+                    
+                    return `
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="keyword-${keyword}" 
+                                   value="${keyword}" 
+                                   ${isSelected ? 'checked' : ''} 
+                                   ${isDisabled ? 'disabled' : ''}
+                                   onchange="toggleKeywordSelection('${keyword}')">
+                            <label class="form-check-label d-flex justify-content-between align-items-center" for="keyword-${keyword}">
+                                <span>${keyword}</span>
+                                <span class="badge bg-secondary">${count}</span>
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = checkboxesHTML;
+                updateSelectedKeywordsCount();
+            } catch (error) {
+                console.error('Error updating keywords list:', error);
+            }
         }
 
         // Update keywords pagination
         function updateKeywordsPagination(sortedKeywords) {
-            const paginationContainer = document.getElementById('keywordsPagination');
-            const totalPages = Math.ceil(sortedKeywords.length / keywordsPerPage);
-            
-            if (totalPages <= 1) {
-                paginationContainer.innerHTML = '';
-                return;
-            }
+            try {
+                const paginationContainer = document.getElementById('keywordsPagination');
+                if (!paginationContainer) {
+                    console.log('Keywords pagination container not found, skipping update');
+                    return;
+                }
+                
+                const totalPages = Math.ceil(sortedKeywords.length / keywordsPerPage);
+                
+                if (totalPages <= 1) {
+                    paginationContainer.innerHTML = '';
+                    return;
+                }
 
-            let paginationHTML = '';
-            
-            // Previous button
-            if (currentKeywordsPage > 1) {
-                paginationHTML += `<button type="button" class="btn btn-outline-secondary" onclick="changeKeywordsPage(${currentKeywordsPage - 1})">‹</button>`;
+                let paginationHTML = '';
+                
+                // Previous button
+                if (currentKeywordsPage > 1) {
+                    paginationHTML += `<button type="button" class="btn btn-outline-secondary" onclick="changeKeywordsPage(${currentKeywordsPage - 1})">‹</button>`;
+                }
+                
+                // Page numbers
+                const startPage = Math.max(1, currentKeywordsPage - 2);
+                const endPage = Math.min(totalPages, currentKeywordsPage + 2);
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const isActive = i === currentKeywordsPage;
+                    paginationHTML += `<button type="button" class="btn ${isActive ? 'btn-primary' : 'btn-outline-secondary'}" onclick="changeKeywordsPage(${i})">${i}</button>`;
+                }
+                
+                // Next button
+                if (currentKeywordsPage < totalPages) {
+                    paginationHTML += `<button type="button" class="btn btn-outline-secondary" onclick="changeKeywordsPage(${currentKeywordsPage + 1})">›</button>`;
+                }
+                
+                paginationContainer.innerHTML = paginationHTML;
+            } catch (error) {
+                console.error('Error updating keywords pagination:', error);
             }
-            
-            // Page numbers
-            const startPage = Math.max(1, currentKeywordsPage - 2);
-            const endPage = Math.min(totalPages, currentKeywordsPage + 2);
-            
-            for (let i = startPage; i <= endPage; i++) {
-                const isActive = i === currentKeywordsPage;
-                paginationHTML += `<button type="button" class="btn ${isActive ? 'btn-primary' : 'btn-outline-secondary'}" onclick="changeKeywordsPage(${i})">${i}</button>`;
-            }
-            
-            // Next button
-            if (currentKeywordsPage < totalPages) {
-                paginationHTML += `<button type="button" class="btn btn-outline-secondary" onclick="changeKeywordsPage(${currentKeywordsPage + 1})">›</button>`;
-            }
-            
-            paginationContainer.innerHTML = paginationHTML;
         }
 
         // Change keywords page
