@@ -1538,6 +1538,7 @@
         let dataSources = [];
         let pendingReviews = []; // Reviews that need manual review
         let reviewedReviews = []; // Reviews that have been manually edited
+        let currentFilteredReviews = []; // For Reviews List tab
 
         // Keywords Manager Storage
         let customKeywords = {
@@ -1589,6 +1590,13 @@
                 console.log('Loaded custom keywords from storage');
             }
 
+            // Load current filtered reviews
+            const savedFiltered = localStorage.getItem('appReviewScraper_filtered');
+            if (savedFiltered) {
+                currentFilteredReviews = JSON.parse(savedFiltered);
+                console.log(`Loaded ${currentFilteredReviews.length} filtered reviews from storage`);
+            }
+
             // Clean up any existing duplicates
             const originalCount = allReviews.length;
             allReviews = removeDuplicateReviews(allReviews);
@@ -1597,6 +1605,9 @@
                 saveToStorage(); // Save the cleaned data
             }
 
+            // Initialize current filtered reviews to show all reviews by default
+            currentFilteredReviews = allReviews;
+            
             // Update UI with loaded data
             console.log('Updating UI with loaded data...');
             updateDashboardMetrics(allReviews);
@@ -1619,6 +1630,7 @@
             localStorage.setItem('appReviewScraper_pending', JSON.stringify(pendingReviews));
             localStorage.setItem('appReviewScraper_reviewed', JSON.stringify(reviewedReviews));
             localStorage.setItem('appReviewScraper_keywords', JSON.stringify(customKeywords));
+            localStorage.setItem('appReviewScraper_filtered', JSON.stringify(currentFilteredReviews));
         }
 
         // Check if there's any data in localStorage
@@ -1793,6 +1805,10 @@
                 });
             }
 
+            // Store filtered reviews globally
+            currentFilteredReviews = filteredReviews;
+            console.log(`Reviews List: Filtered to ${filteredReviews.length} reviews for ${days} days`);
+            
             // Update the table with filtered data
             updateFilteredTable(filteredReviews);
             
@@ -1859,10 +1875,13 @@
 
         // Update small rating trend charts with previous period comparison
         function updateRatingTrendCharts(reviews) {
+            console.log('updateRatingTrendCharts called with', reviews.length, 'reviews');
             const currentTimePeriod = getCurrentTimePeriod();
+            console.log('Current time period:', currentTimePeriod);
             
             // Skip trend charts for "All time" as there's no previous period to compare
             if (currentTimePeriod === 'all' || currentTimePeriod === '0') {
+                console.log('Skipping trend charts for All time period');
                 document.getElementById('total-rating-trend').innerHTML = '';
                 document.getElementById('playstore-rating-trend').innerHTML = '';
                 document.getElementById('appstore-rating-trend').innerHTML = '';
@@ -1918,9 +1937,11 @@
         
         // Update a single rating trend chart
         function updateSingleRatingTrend(containerId, currentAvg, previousAvg) {
+            console.log(`updateSingleRatingTrend: ${containerId}, current: ${currentAvg}, previous: ${previousAvg}`);
             const container = document.getElementById(containerId);
             
             if (currentAvg === 0 || previousAvg === 0) {
+                console.log(`Skipping trend chart for ${containerId} - no data`);
                 container.innerHTML = '';
                 return;
             }
@@ -2969,6 +2990,7 @@
 
                         dataSources.push(newSource);
                         allReviews = allReviews.concat(duplicateCheck.unique);
+                        currentFilteredReviews = allReviews; // Update filtered reviews to show all
 
                         // Save to localStorage
                         saveToStorage();
@@ -3313,7 +3335,11 @@
             const tbody = document.getElementById('reviewsTableBody');
             tbody.innerHTML = '';
 
-            if (allReviews.length === 0) {
+            // Use current filtered reviews if available, otherwise use all reviews
+            const reviewsToShow = currentFilteredReviews.length > 0 ? currentFilteredReviews : allReviews;
+            console.log(`updateReviewsTable: Showing ${reviewsToShow.length} reviews (filtered: ${currentFilteredReviews.length > 0})`);
+
+            if (reviewsToShow.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="8" class="text-center" style="color: var(--medium-gray); padding: 3rem;">
@@ -3325,7 +3351,7 @@
                 return;
             }
 
-            allReviews.slice(0, 50).forEach(review => {
+            reviewsToShow.slice(0, 50).forEach(review => {
                 const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
@@ -3620,6 +3646,7 @@
             
             // Add the reviewed reviews to the main dataset
             allReviews = allReviews.concat(newValidReviews);
+            currentFilteredReviews = allReviews; // Update filtered reviews to show all
             
             // Update pending reviews - remove the ones that were in this modal, add back the incomplete ones
             pendingReviews = pendingReviews.slice(totalInModal).concat(remainingPendingReviews);
