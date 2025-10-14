@@ -3349,6 +3349,9 @@
 
             // Update smart suggestions
             updateSmartSuggestions();
+            
+            // Update filters in other tabs
+            updateKeywordFilters();
         }
 
         function addKeyword(category, inputId) {
@@ -3360,6 +3363,9 @@
                 saveToStorage();
                 loadKeywordsManager();
                 input.value = '';
+                
+                // Update filters in Reviews List tab
+                updateKeywordFilters();
             }
         }
 
@@ -3369,6 +3375,9 @@
                 customKeywords[category].splice(index, 1);
                 saveToStorage();
                 loadKeywordsManager();
+                
+                // Update filters in Reviews List tab
+                updateKeywordFilters();
             }
         }
 
@@ -3385,16 +3394,15 @@
             
             // Golf app competitor suggestions
             const competitorPatterns = [
-                /(golfshot|18birdies|swingu|golfnow|golflogix|arccos|shot scope|the grint|golf pad|hole19)/gi,
-                /(vs|compared to|better than|instead of|alternative to)/gi
+                /(golfshot|18birdies|swingu|golfnow|golflogix|arccos|shot scope|the grint|golf pad|hole19)/gi
             ];
             
             const suggestedCompetitors = [];
-            competitorPatterns[0].exec(allText);
             let match;
             while ((match = competitorPatterns[0].exec(allText)) !== null) {
-                if (!customKeywords.competitors.includes(match[0].toLowerCase())) {
-                    suggestedCompetitors.push(match[0]);
+                const competitor = match[0].toLowerCase();
+                if (!customKeywords.competitors.includes(competitor) && !suggestedCompetitors.includes(competitor)) {
+                    suggestedCompetitors.push(competitor);
                 }
             }
             
@@ -3407,32 +3415,35 @@
             ];
             
             const suggestedGolfTerms = golfTerms.filter(term => 
-                allText.includes(term) && !customKeywords.golfFeatures.includes(term)
+                allText.includes(term) && 
+                !customKeywords.golfFeatures.includes(term) &&
+                !customKeywords.golfFeatures.some(existing => existing.toLowerCase() === term.toLowerCase())
             );
 
-            // Feature suggestions
+            // Feature suggestions - improved pattern matching
+            const suggestedFeatures = [];
             const featurePatterns = [
-                /(need|want|wish|should|could|please|add|implement|feature|function)/gi,
-                /(gps|tracking|scoring|social|sharing|weather|course|tee time|booking)/gi
+                /(need|want|wish|should|could|please|add|implement|feature|function)\s+([a-z\s]+)/gi,
+                /(dark mode|offline mode|apple watch|android wear|tournament mode|social features|leaderboard|voice commands|integration)/gi
             ];
             
-            const suggestedFeatures = [];
-            const featureMatches = allText.match(/need.*?feature|want.*?function|add.*?option/gi);
-            if (featureMatches) {
-                featureMatches.forEach(match => {
-                    const words = match.split(' ').filter(word => word.length > 3);
-                    words.forEach(word => {
-                        if (!customKeywords.featureRequests.includes(word.toLowerCase())) {
-                            suggestedFeatures.push(word.toLowerCase());
-                        }
-                    });
-                });
-            }
+            // Extract feature requests from patterns
+            featurePatterns.forEach(pattern => {
+                let match;
+                while ((match = pattern.exec(allText)) !== null) {
+                    const feature = match[0].toLowerCase().trim();
+                    if (feature.length > 3 && 
+                        !customKeywords.featureRequests.includes(feature) &&
+                        !suggestedFeatures.includes(feature)) {
+                        suggestedFeatures.push(feature);
+                    }
+                }
+            });
 
-            // Update UI
-            updateSuggestionContainer('suggestedCompetitors', suggestedCompetitors.slice(0, 10));
-            updateSuggestionContainer('suggestedGolfTerms', suggestedGolfTerms.slice(0, 10));
-            updateSuggestionContainer('suggestedFeatures', suggestedFeatures.slice(0, 10));
+            // Update UI with deduplicated suggestions
+            updateSuggestionContainer('suggestedCompetitors', [...new Set(suggestedCompetitors)].slice(0, 10));
+            updateSuggestionContainer('suggestedGolfTerms', [...new Set(suggestedGolfTerms)].slice(0, 10));
+            updateSuggestionContainer('suggestedFeatures', [...new Set(suggestedFeatures)].slice(0, 10));
         }
 
         function updateSuggestionContainer(containerId, suggestions) {
@@ -3468,9 +3479,24 @@
                 customKeywords[category].push(suggestion.toLowerCase());
                 saveToStorage();
                 loadKeywordsManager();
+                
+                // Update filters in Reviews List tab
+                updateKeywordFilters();
             }
         }
 
+
+        // Update keyword filters in Reviews List tab
+        function updateKeywordFilters() {
+            // Update keyword tags cloud
+            generateKeywordTags();
+            
+            // Update keyword selector in Dashboard
+            updateKeywordSelector(allReviews);
+            
+            // Update keywords cloud in Dashboard
+            updateKeywordsCloud(allReviews);
+        }
 
         // Enhanced keyword extraction using custom keywords
         function extractKeywordsWithCustom(content) {
