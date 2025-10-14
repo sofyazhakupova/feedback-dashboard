@@ -606,7 +606,7 @@
                             <div class="card-body">
                                 <!-- Keyword Selection List -->
                                 <div class="row mb-4">
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         <div class="mb-3">
                                             <label class="form-label">
                                                 <i class="fas fa-search me-2"></i>Search Keywords
@@ -614,29 +614,31 @@
                                             <input type="text" class="form-control" id="keywordSearchInput" placeholder="Search keywords..." onkeyup="filterKeywords()">
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="mb-3">
                                             <label class="form-label">
-                                                <i class="fas fa-calendar me-2"></i>Time Period
+                                                <i class="fas fa-cog me-2"></i>Step Size
                                             </label>
-                                            <select class="form-select" id="trendTimePeriod" onchange="updateKeywordTrends()">
-                                                <option value="7">Last 7 days</option>
-                                                <option value="30" selected>Last 30 days</option>
-                                                <option value="90">Last 3 months</option>
-                                                <option value="180">Last 6 months</option>
-                                                <option value="365">Last year</option>
-                                                <option value="all">All time</option>
+                                            <select class="form-select" id="stepSizeSelector" onchange="updateKeywordTrends()">
+                                                <option value="day">Daily</option>
+                                                <option value="week" selected>Weekly</option>
+                                                <option value="month">Monthly</option>
                                             </select>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Keywords List with Checkboxes -->
+                                <!-- Keywords List with Checkboxes and Pagination -->
                                 <div class="mb-4">
-                                    <label class="form-label">
-                                        <i class="fas fa-check-square me-2"></i>Select Keywords (max 5)
-                                        <span class="badge bg-secondary ms-2" id="selectedKeywordsCount">0</span>
-                                    </label>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0">
+                                            <i class="fas fa-check-square me-2"></i>Select Keywords (max 5)
+                                            <span class="badge bg-secondary ms-2" id="selectedKeywordsCount">0</span>
+                                        </label>
+                                        <div class="btn-group btn-group-sm" role="group" id="keywordsPagination">
+                                            <!-- Pagination buttons will be added here -->
+                                        </div>
+                                    </div>
                                     <div id="keywordsList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
                                         <p class="text-muted text-center">No keywords available</p>
                                     </div>
@@ -1724,6 +1726,9 @@
             }
 
             updateDashboardMetrics(filteredReviews);
+            
+            // Update keyword trends when global date selector changes
+            updateKeywordTrends();
         }
 
         function updateListForPeriod(days) {
@@ -2239,8 +2244,10 @@
 
         // Global variable to store selected keywords for trends
         let selectedKeywordsForTrends = [];
+        let currentKeywordsPage = 1;
+        const keywordsPerPage = 10;
 
-        // Update keywords list with checkboxes
+        // Update keywords list with checkboxes and pagination
         function updateKeywordsList() {
             const container = document.getElementById('keywordsList');
             const searchInput = document.getElementById('keywordSearchInput');
@@ -2255,6 +2262,7 @@
             
             if (managedKeywords.length === 0) {
                 container.innerHTML = '<p class="text-muted text-center">No keywords managed yet. Add keywords in Keywords tab.</p>';
+                updateKeywordsPagination([]);
                 return;
             }
 
@@ -2283,13 +2291,26 @@
                 .map(keyword => ({ keyword, count: keywordCounts[keyword] }))
                 .sort((a, b) => b.count - a.count);
 
-            if (sortedKeywords.length === 0) {
+            // Update pagination
+            updateKeywordsPagination(sortedKeywords);
+
+            // Get keywords for current page
+            const startIndex = (currentKeywordsPage - 1) * keywordsPerPage;
+            const endIndex = startIndex + keywordsPerPage;
+            const pageKeywords = sortedKeywords.slice(startIndex, endIndex);
+
+            if (pageKeywords.length === 0) {
                 container.innerHTML = '<p class="text-muted text-center">No keywords match your search.</p>';
                 return;
             }
 
+            // Auto-select first 5 keywords on first page if none selected
+            if (currentKeywordsPage === 1 && selectedKeywordsForTrends.length === 0 && pageKeywords.length > 0) {
+                selectedKeywordsForTrends = pageKeywords.slice(0, 5).map(item => item.keyword);
+            }
+
             // Create checkboxes
-            const checkboxesHTML = sortedKeywords.map(({ keyword, count }) => {
+            const checkboxesHTML = pageKeywords.map(({ keyword, count }) => {
                 const isSelected = selectedKeywordsForTrends.includes(keyword);
                 const isDisabled = !isSelected && selectedKeywordsForTrends.length >= 5;
                 
@@ -2311,6 +2332,46 @@
 
             container.innerHTML = checkboxesHTML;
             updateSelectedKeywordsCount();
+        }
+
+        // Update keywords pagination
+        function updateKeywordsPagination(sortedKeywords) {
+            const paginationContainer = document.getElementById('keywordsPagination');
+            const totalPages = Math.ceil(sortedKeywords.length / keywordsPerPage);
+            
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            if (currentKeywordsPage > 1) {
+                paginationHTML += `<button type="button" class="btn btn-outline-secondary" onclick="changeKeywordsPage(${currentKeywordsPage - 1})">‹</button>`;
+            }
+            
+            // Page numbers
+            const startPage = Math.max(1, currentKeywordsPage - 2);
+            const endPage = Math.min(totalPages, currentKeywordsPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentKeywordsPage;
+                paginationHTML += `<button type="button" class="btn ${isActive ? 'btn-primary' : 'btn-outline-secondary'}" onclick="changeKeywordsPage(${i})">${i}</button>`;
+            }
+            
+            // Next button
+            if (currentKeywordsPage < totalPages) {
+                paginationHTML += `<button type="button" class="btn btn-outline-secondary" onclick="changeKeywordsPage(${currentKeywordsPage + 1})">›</button>`;
+            }
+            
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        // Change keywords page
+        function changeKeywordsPage(page) {
+            currentKeywordsPage = page;
+            updateKeywordsList();
         }
 
         // Toggle keyword selection for trends
@@ -2346,13 +2407,37 @@
 
         // Filter keywords based on search input
         function filterKeywords() {
+            currentKeywordsPage = 1; // Reset to first page when searching
             updateKeywordsList();
+        }
+
+        // Get current global time period
+        function getCurrentTimePeriod() {
+            const selectedPeriod = document.querySelector('input[name="timePeriod"]:checked');
+            return selectedPeriod ? selectedPeriod.value : '30';
+        }
+
+        // Get current step size based on time period
+        function getCurrentStepSize() {
+            const timePeriod = getCurrentTimePeriod();
+            const stepSizeSelector = document.getElementById('stepSizeSelector');
+            
+            // Auto-set step size based on time period
+            if (timePeriod === '7' || timePeriod === '30') {
+                stepSizeSelector.value = 'day';
+            } else if (timePeriod === '90' || timePeriod === '180') {
+                stepSizeSelector.value = 'week';
+            } else if (timePeriod === '365' || timePeriod === 'all') {
+                stepSizeSelector.value = 'week'; // Default to week, user can change
+            }
+            
+            return stepSizeSelector ? stepSizeSelector.value : 'week';
         }
 
         function updateKeywordTrends() {
             const container = document.getElementById('keywordTrendsChart');
-            const timePeriodSelect = document.getElementById('trendTimePeriod');
-            const timePeriod = timePeriodSelect ? timePeriodSelect.value : '30';
+            const timePeriod = getCurrentTimePeriod();
+            const stepSize = getCurrentStepSize();
             
             if (selectedKeywordsForTrends.length === 0) {
                 container.innerHTML = `
@@ -2366,7 +2451,7 @@
                 return;
             }
             
-            // Get filtered reviews based on selected period
+            // Get filtered reviews based on global time period
             let filteredReviews = allReviews;
             if (timePeriod !== 'all') {
                 const days = parseInt(timePeriod);
@@ -2390,34 +2475,34 @@
                 return;
             }
             
-            // Group reviews by week
-            const weeklyData = {};
+            // Group reviews by step size
+            const stepData = {};
             const colors = ['#ff6b6b', '#ff8e53', '#ff6b9d', '#c44569', '#f8b500'];
             
             selectedKeywordsForTrends.forEach((keyword, index) => {
-                weeklyData[keyword] = {};
+                stepData[keyword] = {};
                 
                 filteredReviews.forEach(review => {
                     const reviewDate = new Date(review.date);
-                    const weekKey = getWeekKey(reviewDate);
+                    const stepKey = getStepKey(reviewDate, stepSize);
                     
-                    if (!weeklyData[keyword][weekKey]) {
-                        weeklyData[keyword][weekKey] = 0;
+                    if (!stepData[keyword][stepKey]) {
+                        stepData[keyword][stepKey] = 0;
                     }
                     
                     if (review.content && review.content.toLowerCase().includes(keyword.toLowerCase())) {
-                        weeklyData[keyword][weekKey]++;
+                        stepData[keyword][stepKey]++;
                     }
                 });
             });
             
             // Prepare data for Plotly
             const traces = selectedKeywordsForTrends.map((keyword, index) => {
-                const weeks = Object.keys(weeklyData[keyword]).sort();
-                const counts = weeks.map(week => weeklyData[keyword][week]);
+                const steps = Object.keys(stepData[keyword]).sort();
+                const counts = steps.map(step => stepData[keyword][step]);
                 
                 return {
-                    x: weeks,
+                    x: steps,
                     y: counts,
                     type: 'scatter',
                     mode: 'lines+markers',
@@ -2435,11 +2520,11 @@
             
             const layout = {
                 title: {
-                    text: `Keyword Trends - ${getTimePeriodLabel(timePeriod)}`,
+                    text: `Keyword Trends - ${getTimePeriodLabel(timePeriod)} (${stepSize === 'day' ? 'Daily' : stepSize === 'week' ? 'Weekly' : 'Monthly'})`,
                     font: { size: 16, color: '#24292f' }
                 },
                 xaxis: {
-                    title: 'Week',
+                    title: stepSize === 'day' ? 'Day' : stepSize === 'week' ? 'Week' : 'Month',
                     gridcolor: '#e1e4e8',
                     color: '#24292f'
                 },
@@ -2465,33 +2550,20 @@
             Plotly.newPlot(container, traces, layout, {responsive: true});
         }
         
-        // Helper function to get week key
-        function getWeekKey(date) {
-            const year = date.getFullYear();
-            const week = getWeekNumber(date);
-            return `${year}-W${week.toString().padStart(2, '0')}`;
-        }
-        
-        // Helper function to get week number
-        function getWeekNumber(date) {
-            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        }
-        
-        // Helper function to get time period label
-        function getTimePeriodLabel(period) {
-            const labels = {
-                '7': 'Last 7 days',
-                '30': 'Last 30 days',
-                '90': 'Last 3 months',
-                '180': 'Last 6 months',
-                '365': 'Last year',
-                'all': 'All time'
-            };
-            return labels[period] || 'Last 30 days';
+        // Helper function to get step key based on step size
+        function getStepKey(date, stepSize) {
+            if (stepSize === 'day') {
+                return date.toISOString().split('T')[0]; // YYYY-MM-DD
+            } else if (stepSize === 'week') {
+                const year = date.getFullYear();
+                const week = getWeekNumber(date);
+                return `${year}-W${week.toString().padStart(2, '0')}`;
+            } else if (stepSize === 'month') {
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                return `${year}-${month.toString().padStart(2, '0')}`;
+            }
+            return date.toISOString().split('T')[0];
         }
 
         function updateCharts(reviews) {
