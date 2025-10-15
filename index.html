@@ -1855,6 +1855,7 @@
             if (savedReviews) {
                 allReviews = JSON.parse(savedReviews);
                 console.log(`Loaded ${allReviews.length} reviews from storage`);
+                console.log('Sample review:', allReviews[0]);
             } else {
                 console.log('No saved reviews found');
             }
@@ -1909,6 +1910,8 @@
             
             // Update UI with loaded data
             console.log('Updating UI with loaded data...');
+            console.log('allReviews length:', allReviews.length);
+            console.log('dataSources length:', dataSources.length);
             updateDashboardMetricsStatic(allReviews);
             updateReviewsTable();
             updatePagination();
@@ -5131,13 +5134,16 @@
         }
 
         function updateSmartSuggestions() {
+            console.log('updateSmartSuggestions called with', allReviews.length, 'reviews');
             if (allReviews.length === 0) {
+                console.log('No reviews found, showing upload message');
                 document.getElementById('suggestedCompetitors').innerHTML = '<p class="text-muted small">Upload reviews to get suggestions</p>';
                 document.getElementById('suggestedGolfTerms').innerHTML = '<p class="text-muted small">Upload reviews to get suggestions</p>';
                 document.getElementById('suggestedFeatures').innerHTML = '<p class="text-muted small">Upload reviews to get suggestions</p>';
                 return;
             }
 
+            console.log('Analyzing reviews for suggestions...');
             // Analyze reviews for suggestions
             const allText = allReviews.map(r => r.content).join(' ').toLowerCase();
             
