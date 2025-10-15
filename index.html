@@ -692,7 +692,7 @@
                 <!-- Top Metrics Row -->
                 <div class="row mb-4">
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card metric-card h-100 clickable-rating" data-rating-type="overall" onclick="showDetailedChart('overall')">
+                        <div class="card metric-card h-100 clickable-rating" id="overall-rating-card" data-rating-type="overall" onclick="scrollToDetailedChart()">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
@@ -714,7 +714,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card metric-card h-100 clickable-rating" data-rating-type="google_play" onclick="showDetailedChart('google_play')">
+                        <div class="card metric-card h-100 clickable-rating" id="google-play-rating-card" data-rating-type="google_play" onclick="scrollToDetailedChart()">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
@@ -736,7 +736,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card metric-card h-100 clickable-rating" data-rating-type="app_store" onclick="showDetailedChart('app_store')">
+                        <div class="card metric-card h-100 clickable-rating" id="app-store-rating-card" data-rating-type="app_store" onclick="scrollToDetailedChart()">
                             <div class="card-body">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="d-flex align-items-center">
@@ -819,42 +819,6 @@
                     </div>
                 </div>
 
-                <!-- Detailed Rating Trends Chart -->
-                <div class="row mb-5" id="detailedChartSection" style="display: none;">
-                    <div class="col-12">
-                        <div class="card chart-card">
-                            <div class="card-header">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-chart-line me-2"></i>
-                                            <span id="detailedChartTitle">All Rating Trends Comparison</span>
-                                        </h5>
-                                        <small class="text-muted">Compare Overall, Google Play, and Apple Store rating trends over time</small>
-                            </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex justify-content-end align-items-center">
-                                            <div class="me-3">
-                                                <label class="form-label small mb-0">Step Size:</label>
-                                                <select class="form-select form-select-sm" id="detailedChartStepSize" onchange="updateDetailedChart()" style="width: auto;">
-                                                    <option value="day">Daily</option>
-                                                    <option value="week" selected>Weekly</option>
-                                                    <option value="month">Monthly</option>
-                                                </select>
-                        </div>
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="hideDetailedChart()">
-                                                <i class="fas fa-times me-1"></i>Close
-                                            </button>
-                    </div>
-                            </div>
-                        </div>
-                    </div>
-                            <div class="card-body">
-                                <div id="detailedRatingChart" style="height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Combined Keywords and Trends -->
                 <div class="row mb-5">
@@ -1021,6 +985,39 @@
                     </div>
                 </div>
 
+                <!-- Detailed Rating Trends Chart - Always Visible -->
+                <div class="row mb-5" id="detailedChartSection">
+                    <div class="col-12">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-chart-line me-2"></i>
+                                            <span id="detailedChartTitle">All Rating Trends Comparison</span>
+                                        </h5>
+                                        <small class="text-muted">Compare Overall, Google Play, and Apple Store rating trends over time</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-end align-items-center">
+                                            <div class="me-3">
+                                                <label class="form-label small mb-0">Step Size:</label>
+                                                <select class="form-select form-select-sm" id="detailedChartStepSize" onchange="updateDetailedChart()" style="width: auto;">
+                                                    <option value="day">Daily</option>
+                                                    <option value="week">Weekly</option>
+                                                    <option value="month" selected>Monthly</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="detailedRatingChart" style="height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Rating and Trends -->
                 <div class="row mb-5">
@@ -1937,6 +1934,7 @@
             updateSourceFilter();
             updatePendingCount();
             updateSourceList();
+            updateDetailedChart(); // Initialize the detailed chart
             updateSourceCount();
             
             // Update keyword trends chart
@@ -2105,10 +2103,8 @@
             console.log(`Updating dashboard with ${filteredReviews.length} reviews`);
             updateDashboardMetricsStatic(filteredReviews);
             
-            // Update detailed chart if visible
-            if (currentDetailedChartType) {
-                updateDetailedChart();
-            }
+            // Update detailed chart (now always visible)
+            updateDetailedChart();
             
             // Update keyword trends when global date selector changes
             updateKeywordTrends();
@@ -2165,36 +2161,17 @@
         // Global variable to track current detailed chart type
         let currentDetailedChartType = null;
 
-        // Show detailed chart - always shows all rating trends
-        function showDetailedChart(ratingType) {
-            currentDetailedChartType = ratingType;
-            
-            // Always use the same title since we show all trends
-            document.getElementById('detailedChartTitle').textContent = 'All Rating Trends Comparison';
-            
-            // Show the detailed chart section
-            document.getElementById('detailedChartSection').style.display = 'block';
-            
-            // Scroll to the chart
+        // Scroll to detailed chart (now always visible)
+        function scrollToDetailedChart() {
             document.getElementById('detailedChartSection').scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'start' 
             });
-            
-            // Update the chart
-            updateDetailedChart();
         }
 
-        // Hide detailed chart
-        function hideDetailedChart() {
-            document.getElementById('detailedChartSection').style.display = 'none';
-            currentDetailedChartType = null;
-        }
 
-        // Update detailed chart based on current selection and time period
+        // Update detailed chart based on current time period
         function updateDetailedChart() {
-            if (!currentDetailedChartType) return;
-            
             const stepSize = document.getElementById('detailedChartStepSize').value;
             const timePeriod = getCurrentTimePeriod();
             
@@ -2210,8 +2187,8 @@
                 });
             }
             
-            // Generate chart data based on rating type
-            generateDetailedRatingChart(reviewsToAnalyze, currentDetailedChartType, stepSize);
+            // Generate chart data (always shows all trends)
+            generateDetailedRatingChart(reviewsToAnalyze, 'all', stepSize);
         }
 
         // Generate detailed rating chart - always shows all 3 trends
