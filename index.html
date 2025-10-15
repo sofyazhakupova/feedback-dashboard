@@ -1558,9 +1558,6 @@
                         <button class="btn btn-outline-danger ms-2" onclick="clearAllData()">
                             <i class="fas fa-trash me-2"></i>Clear All Data
                         </button>
-                        <button class="btn btn-outline-info ms-2" onclick="loadDemoDataAndRefresh()">
-                            <i class="fas fa-database me-2"></i>Load Demo Data
-                        </button>
                     </div>
                 </div>
 
@@ -1925,8 +1922,6 @@
                 console.log('Sample review:', allReviews[0]);
             } else {
                 console.log('No saved reviews found');
-                // Load demo data for testing
-                loadDemoData();
             }
 
             // Load data sources
@@ -1936,7 +1931,6 @@
                 console.log(`Loaded ${dataSources.length} data sources from storage`);
             } else {
                 console.log('No saved data sources found');
-                // Demo data already loaded in loadDemoData()
             }
 
             // Load pending reviews
@@ -1958,9 +1952,6 @@
             if (savedKeywords) {
                 customKeywords = JSON.parse(savedKeywords);
                 console.log('Loaded custom keywords from storage');
-            } else {
-                console.log('No saved keywords found');
-                // Demo data already loaded in loadDemoData()
             }
 
             // Load current filtered reviews
@@ -2025,178 +2016,6 @@
             return data;
         }
 
-        // Load demo data for testing
-        function loadDemoData() {
-            console.log('Loading demo data...');
-            
-            // Sample reviews data
-            allReviews = [
-                {
-                    id: 1,
-                    date: '2024-01-15',
-                    content: 'Amazing golf app! The GPS accuracy is incredible and the course maps are detailed. Love the shot tracking feature.',
-                    author: 'John Smith',
-                    source: 'google_play',
-                    rating: 5
-                },
-                {
-                    id: 2,
-                    date: '2024-01-16',
-                    content: 'Great app but needs improvement in weather updates. Sometimes shows outdated conditions.',
-                    author: 'Sarah Johnson',
-                    source: 'app_store',
-                    rating: 4
-                },
-                {
-                    id: 3,
-                    date: '2024-01-17',
-                    content: 'Perfect for tracking my handicap! The statistics are very helpful for improving my game.',
-                    author: 'Mike Wilson',
-                    source: 'google_play',
-                    rating: 5
-                },
-                {
-                    id: 4,
-                    date: '2024-01-18',
-                    content: 'App crashes frequently on my iPhone. Need to fix the stability issues.',
-                    author: 'Lisa Brown',
-                    source: 'app_store',
-                    rating: 2
-                },
-                {
-                    id: 5,
-                    date: '2024-01-19',
-                    content: 'Excellent course database! Found courses I never knew existed. The reviews from other golfers are helpful.',
-                    author: 'David Lee',
-                    source: 'google_play',
-                    rating: 5
-                },
-                {
-                    id: 6,
-                    date: '2024-01-20',
-                    content: 'Good app overall but the UI could be more intuitive. Takes time to learn all the features.',
-                    author: 'Emma Davis',
-                    source: 'app_store',
-                    rating: 3
-                },
-                {
-                    id: 7,
-                    date: '2024-01-21',
-                    content: 'Love the social features! Can connect with friends and compare scores. Makes golf more fun.',
-                    author: 'Tom Anderson',
-                    source: 'google_play',
-                    rating: 4
-                },
-                {
-                    id: 8,
-                    date: '2024-01-22',
-                    content: 'The premium features are worth it. Advanced analytics help me understand my game better.',
-                    author: 'Rachel Green',
-                    source: 'app_store',
-                    rating: 5
-                },
-                {
-                    id: 9,
-                    date: '2024-01-23',
-                    content: 'App is slow to load course data. Need better performance optimization.',
-                    author: 'Chris Taylor',
-                    source: 'google_play',
-                    rating: 3
-                },
-                {
-                    id: 10,
-                    date: '2024-01-24',
-                    content: 'Best golf app I\'ve used! The shot tracking is accurate and the interface is clean.',
-                    author: 'Amy White',
-                    source: 'app_store',
-                    rating: 5
-                },
-                {
-                    id: 11,
-                    date: '2024-01-25',
-                    content: 'Great for beginners! The tutorials and tips helped me improve my swing significantly.',
-                    author: 'Mark Thompson',
-                    source: 'google_play',
-                    rating: 4
-                },
-                {
-                    id: 12,
-                    date: '2024-01-26',
-                    content: 'App keeps logging me out. Need to fix the authentication system.',
-                    author: 'Jennifer Martinez',
-                    source: 'app_store',
-                    rating: 2
-                },
-                {
-                    id: 13,
-                    date: '2024-01-27',
-                    content: 'Excellent customer support! They responded quickly to my questions about the app features.',
-                    author: 'Robert Garcia',
-                    source: 'google_play',
-                    rating: 5
-                },
-                {
-                    id: 14,
-                    date: '2024-01-28',
-                    content: 'The weather integration is fantastic! Always know the conditions before heading to the course.',
-                    author: 'Michelle Rodriguez',
-                    source: 'app_store',
-                    rating: 4
-                },
-                {
-                    id: 15,
-                    date: '2024-01-29',
-                    content: 'App is good but needs more course options in my area. Limited selection.',
-                    author: 'Kevin Lewis',
-                    source: 'google_play',
-                    rating: 3
-                }
-            ];
-
-            // Sample data sources
-            dataSources = [
-                {
-                    id: 1,
-                    name: 'Google Play Store Reviews',
-                    type: 'csv',
-                    description: 'Sample reviews from Google Play Store',
-                    data: allReviews.filter(r => r.source === 'google_play'),
-                    createdAt: '2024-01-15T10:00:00Z'
-                },
-                {
-                    id: 2,
-                    name: 'Apple App Store Reviews',
-                    type: 'csv',
-                    description: 'Sample reviews from Apple App Store',
-                    data: allReviews.filter(r => r.source === 'app_store'),
-                    createdAt: '2024-01-15T10:00:00Z'
-                }
-            ];
-
-            // Sample keywords
-            customKeywords = {
-                competitors: ['golfshot', '18birdies', 'swingu'],
-                golfTerms: ['handicap', 'golf course', 'shot tracking', 'gps', 'weather'],
-                featureRequests: ['better ui', 'more courses', 'social features', 'weather updates'],
-                painPoints: ['app crashes', 'slow loading', 'authentication issues']
-            };
-
-            // Set current filtered reviews
-            currentFilteredReviews = allReviews;
-
-            console.log(`Demo data loaded: ${allReviews.length} reviews, ${dataSources.length} sources`);
-        }
-
-        // Load demo data and refresh UI
-        function loadDemoDataAndRefresh() {
-            if (confirm('This will replace all current data with demo data. Are you sure?')) {
-                loadDemoData();
-                saveToStorage();
-                updateUI();
-                updateSmartSuggestions();
-                alert('Demo data loaded successfully! You can now explore all features with sample data.');
-            }
-        }
 
         // Clear all stored data
         function clearAllData() {
