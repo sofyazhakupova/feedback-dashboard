@@ -1013,12 +1013,12 @@
                             <div class="card-header">
                                 <div class="row align-items-center">
                                     <div class="col-md-6">
-                                        <h5 class="mb-0">
+                                <h5 class="mb-0">
                                             <i class="fas fa-chart-line me-2"></i>
                                             <span id="detailedChartTitle">All Rating Trends Comparison</span>
-                                        </h5>
+                                </h5>
                                         <small class="text-muted">Compare Overall, Google Play, and Apple Store rating trends over time</small>
-                                    </div>
+                            </div>
                                     <div class="col-md-6">
                                         <div class="d-flex justify-content-end align-items-center">
                                             <div class="me-3">
@@ -1028,17 +1028,17 @@
                                                     <option value="week">Weekly</option>
                                                     <option value="month" selected>Monthly</option>
                                                 </select>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
                             <div class="card-body">
                                 <div id="detailedRatingChart" style="height: 400px;"></div>
-                            </div>
-                        </div>
                     </div>
-                </div>
+                            </div>
+                                        </div>
+                                    </div>
 
             </div>
 
@@ -1069,35 +1069,35 @@
                                     <span class="period-label">7 Days</span>
                                     <small class="period-count" id="count-7-list">0</small>
                                 </label>
-                                
+
                                 <input type="radio" class="btn-check" name="timePeriodList" id="lastMonthList" value="30">
                                 <label class="btn btn-outline-primary" for="lastMonthList">
                                     <i class="fas fa-calendar-alt me-2"></i>
                                     <span class="period-label">1 Month</span>
                                     <small class="period-count" id="count-30-list">0</small>
                                 </label>
-                                
+
                                 <input type="radio" class="btn-check" name="timePeriodList" id="last3MonthsList" value="90">
                                 <label class="btn btn-outline-primary" for="last3MonthsList">
                                     <i class="fas fa-calendar me-2"></i>
                                     <span class="period-label">3 Months</span>
                                     <small class="period-count" id="count-90-list">0</small>
                                 </label>
-                                
+
                                 <input type="radio" class="btn-check" name="timePeriodList" id="last6MonthsList" value="180">
                                 <label class="btn btn-outline-primary" for="last6MonthsList">
                                     <i class="fas fa-calendar-check me-2"></i>
                                     <span class="period-label">6 Months</span>
                                     <small class="period-count" id="count-180-list">0</small>
                                 </label>
-                                
+
                                 <input type="radio" class="btn-check" name="timePeriodList" id="lastYearList" value="365">
                                 <label class="btn btn-outline-primary" for="lastYearList">
                                     <i class="fas fa-calendar-day me-2"></i>
                                     <span class="period-label">1 Year</span>
                                     <small class="period-count" id="count-365-list">0</small>
                                 </label>
-                                
+
                                 <input type="radio" class="btn-check" name="timePeriodList" id="allTimeList" value="0" checked>
                                 <label class="btn btn-outline-primary" for="allTimeList">
                                     <i class="fas fa-infinity me-2"></i>
@@ -2054,8 +2054,10 @@
                 applyFilters();
                 generateKeywordTags(); // Refresh keyword tags to remove highlighting
             });
-            document.getElementById('startDate').addEventListener('change', applyFilters);
-            document.getElementById('endDate').addEventListener('change', applyFilters);
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            if (startDateEl) startDateEl.addEventListener('change', applyFilters);
+            if (endDateEl) endDateEl.addEventListener('change', applyFilters);
         }
 
         function updateDashboardForPeriod(days) {
@@ -4102,12 +4104,12 @@
         }
 
         function applyFilters() {
-            const sourceFilter = document.getElementById('sourceFilter').value;
-            const userTypeFilter = document.getElementById('userTypeFilter').value;
-            const ratingFilter = document.getElementById('ratingFilter').value;
-            const keywordSearch = document.getElementById('keywordSearch').value.toLowerCase();
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+            const sourceFilter = document.getElementById('sourceFilter')?.value || '';
+            const userTypeFilter = document.getElementById('userTypeFilter')?.value || '';
+            const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+            const keywordSearch = document.getElementById('keywordSearch')?.value?.toLowerCase() || '';
+            const startDate = document.getElementById('startDate')?.value || '';
+            const endDate = document.getElementById('endDate')?.value || '';
 
             let filteredReviews = allReviews.filter(review => {
                 if (sourceFilter && review.source !== sourceFilter) return false;
@@ -4234,8 +4236,16 @@
         }
 
         function applyCustomDateRange() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            
+            if (!startDateEl || !endDateEl) {
+                console.log('Date range elements not found');
+                return;
+            }
+            
+            const startDate = startDateEl.value;
+            const endDate = endDateEl.value;
             
             if (!startDate || !endDate) {
                 alert('Please select both start and end dates');
@@ -4277,11 +4287,15 @@
         }
 
         function clearCustomDateRange() {
-            document.getElementById('startDate').value = '';
-            document.getElementById('endDate').value = '';
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            
+            if (startDateEl) startDateEl.value = '';
+            if (endDateEl) endDateEl.value = '';
             
             // Reset to all time
-            document.getElementById('allTimeList').checked = true;
+            const allTimeEl = document.getElementById('allTimeList');
+            if (allTimeEl) allTimeEl.checked = true;
             currentFilteredReviews = allReviews;
             currentPage = 1;
             
@@ -4380,12 +4394,19 @@
         }
 
         function clearFilters() {
-            document.getElementById('sourceFilter').value = '';
-            document.getElementById('userTypeFilter').value = '';
-            document.getElementById('ratingFilter').value = '';
-            document.getElementById('keywordSearch').value = '';
-            document.getElementById('startDate').value = '';
-            document.getElementById('endDate').value = '';
+            const sourceFilterEl = document.getElementById('sourceFilter');
+            const userTypeFilterEl = document.getElementById('userTypeFilter');
+            const ratingFilterEl = document.getElementById('ratingFilter');
+            const keywordSearchEl = document.getElementById('keywordSearch');
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            
+            if (sourceFilterEl) sourceFilterEl.value = '';
+            if (userTypeFilterEl) userTypeFilterEl.value = '';
+            if (ratingFilterEl) ratingFilterEl.value = '';
+            if (keywordSearchEl) keywordSearchEl.value = '';
+            if (startDateEl) startDateEl.value = '';
+            if (endDateEl) endDateEl.value = '';
             
             // Reset sorting
             currentSortColumn = null;
