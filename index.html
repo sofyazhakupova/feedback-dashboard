@@ -945,12 +945,7 @@
                                 <span id="filterSummary" class="ms-3"></span>
                             </div>
                             <div class="d-flex align-items-center">
-                                <label class="form-label me-2 mb-0">
-                                    Search
-                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="showKeywordsTab()" title="Manage Keywords">
-                                        <i class="fas fa-cog"></i>
-                                    </button>
-                                </label>
+                                <label class="form-label me-2 mb-0">Search</label>
                                 <input type="text" class="form-control" id="keywordSearch" placeholder="Search reviews..." style="width: 200px;">
                             </div>
                         </div>
@@ -1894,7 +1889,7 @@
             updateFilteredTable(filteredReviews);
             
             // Update results count
-            document.getElementById('resultsCount').textContent = filteredReviews.length;
+            document.getElementById('resultsCount').innerHTML = filteredReviews.length;
         }
 
         function updateDashboardMetrics(reviews) {
@@ -3596,7 +3591,7 @@
             });
 
             // Update results count
-            document.getElementById('resultsCount').textContent = filteredReviews.length;
+            document.getElementById('resultsCount').innerHTML = filteredReviews.length;
             
             // Update filter summary
             const filters = [];
@@ -3733,7 +3728,7 @@
             updatePagination();
             
             // Update results count
-            document.getElementById('resultsCount').textContent = filteredReviews.length;
+            document.getElementById('resultsCount').innerHTML = filteredReviews.length;
             document.getElementById('filterSummary').textContent = `Custom Date Range: ${startDate} to ${endDate}`;
             
             // Close dropdown
@@ -3754,7 +3749,7 @@
             updatePagination();
             
             // Update results count
-            document.getElementById('resultsCount').textContent = allReviews.length;
+            document.getElementById('resultsCount').innerHTML = allReviews.length;
             document.getElementById('filterSummary').textContent = '';
             
             // Close dropdown
@@ -3863,7 +3858,7 @@
             // Reset active keyword
             activeKeyword = null;
             
-            document.getElementById('resultsCount').textContent = allReviews.length;
+            document.getElementById('resultsCount').innerHTML = allReviews.length;
             document.getElementById('filterSummary').textContent = '';
             
             updateReviewsTable();
