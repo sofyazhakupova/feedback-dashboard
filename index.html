@@ -543,7 +543,7 @@
             z-index: 1020;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            padding: 1rem 2rem;
+            padding: 1rem 0;
             margin: -1rem 0 1rem 0;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
@@ -556,11 +556,22 @@
             z-index: 1010;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            padding: 1rem 2rem;
+            padding: 1rem 0;
             margin: -1rem 0 1rem 0;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
             box-shadow: none;
+        }
+
+        /* Add proper spacing from screen edges for sticky content */
+        .sticky-top .nav-tabs {
+            margin-left: 2rem;
+            margin-right: 2rem;
+        }
+
+        .sticky-time-period .row {
+            margin-left: 2rem;
+            margin-right: 2rem;
         }
 
         /* Ensure content inside sticky sections has proper padding */
@@ -575,7 +586,17 @@
             .sticky-top,
             .sticky-time-period {
                 margin-left: calc(-50vw + 50%);
-                padding: 0.75rem 1rem;
+                padding: 0.75rem 0;
+            }
+            
+            .sticky-top .nav-tabs {
+                margin-left: 1rem;
+                margin-right: 1rem;
+            }
+
+            .sticky-time-period .row {
+                margin-left: 1rem;
+                margin-right: 1rem;
             }
             
             .sticky-top .container,
@@ -588,7 +609,17 @@
         @media (max-width: 576px) {
             .sticky-top,
             .sticky-time-period {
-                padding: 0.5rem 0.75rem;
+                padding: 0.5rem 0;
+            }
+
+            .sticky-top .nav-tabs {
+                margin-left: 0.75rem;
+                margin-right: 0.75rem;
+            }
+
+            .sticky-time-period .row {
+                margin-left: 0.75rem;
+                margin-right: 0.75rem;
             }
         }
 
