@@ -1870,7 +1870,7 @@
             
             // Update UI with loaded data
             console.log('Updating UI with loaded data...');
-            updateDashboardMetrics(allReviews);
+            updateDashboardMetricsStatic(allReviews);
             updateReviewsTable();
             updatePagination();
             updateSourceFilter();
@@ -1923,7 +1923,7 @@
                 localStorage.removeItem('appReviewScraper_reviewed');
                 
                 // Update UI
-                updateDashboardMetrics(allReviews);
+                updateDashboardMetricsStatic(allReviews);
                 updateReviewsTable();
                 updateSourceFilter();
                 updatePendingCount();
@@ -2042,7 +2042,7 @@
             }
 
             console.log(`Updating dashboard with ${filteredReviews.length} reviews`);
-            updateDashboardMetrics(filteredReviews);
+            updateDashboardMetricsStatic(filteredReviews);
             
             // Update keyword trends when global date selector changes
             updateKeywordTrends();
@@ -2080,6 +2080,20 @@
             
             // Update results count
             document.getElementById('resultsCount').innerHTML = ` ${filteredReviews.length} `;
+        }
+
+        // Update dashboard metrics with static ratings (always last 3 months vs previous 3 months)
+        function updateDashboardMetricsStatic(filteredReviews) {
+            console.log('Updating dashboard metrics with static ratings...');
+            
+            // Always calculate ratings using ALL reviews (not filtered)
+            updateThreeMonthRatingMetrics(allReviews);
+            
+            // Update other metrics using filtered reviews
+            updateAdvancedAnalytics(filteredReviews);
+            
+            // Update time period selector labels with feedback counts
+            updateTimePeriodLabelsWithCounts(allReviews);
         }
 
         function updateDashboardMetrics(reviews) {
@@ -3356,7 +3370,7 @@
                         // Update UI
                         updateSourceCount();
                         updateSourceList();
-                        updateDashboardMetrics(allReviews);
+                        updateDashboardMetricsStatic(allReviews);
                         updateReviewsTable();
                         updateSourceFilter();
 
@@ -4091,7 +4105,7 @@
                     // Update UI
                     updateSourceCount();
                     updateSourceList();
-                    updateDashboardMetrics(allReviews);
+                    updateDashboardMetricsStatic(allReviews);
                     updateReviewsTable();
                     updateSourceFilter();
                     updatePendingCount();
@@ -4247,7 +4261,7 @@
             saveToStorage();
             
             // Update UI
-            updateDashboardMetrics(allReviews);
+            updateDashboardMetricsStatic(allReviews);
             updateReviewsTable();
             updateSourceFilter();
             updatePendingCount();
@@ -4374,7 +4388,7 @@
             allReviews[currentEditingIndex] = updatedReview;
             
             // Update UI
-            updateDashboardMetrics(allReviews);
+            updateDashboardMetricsStatic(allReviews);
             updateReviewsTable();
             updateSourceFilter();
             
@@ -4396,7 +4410,7 @@
                 allReviews.splice(currentEditingIndex, 1);
                 
                 // Update UI
-                updateDashboardMetrics(allReviews);
+                updateDashboardMetricsStatic(allReviews);
                 updateReviewsTable();
                 updateSourceFilter();
                 
