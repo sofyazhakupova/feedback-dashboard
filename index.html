@@ -2183,6 +2183,9 @@
             // Add sample data if no reviews exist (for testing keywords)
             if (allReviews.length === 0) {
                 addSampleReviewsForTesting();
+            } else {
+                // Auto-select top keywords if reviews already exist
+                autoSelectTopKeywords();
             }
             
             console.log('Initialization completed');
@@ -2248,6 +2251,28 @@
             
             // Save to localStorage
             saveToStorage();
+            
+            // Auto-select top keywords after adding sample data
+            autoSelectTopKeywords();
+        }
+        
+        // Auto-select the 5 most popular keywords
+        function autoSelectTopKeywords() {
+            if (allReviews.length === 0) return;
+            
+            const allKeywords = extractAllKeywords(allReviews);
+            const topKeywords = Object.entries(allKeywords)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5)
+                .map(([keyword]) => keyword);
+            
+            selectedKeywordsForTrends = topKeywords;
+            console.log('Auto-selected top 5 keywords:', topKeywords);
+            
+            // Update UI
+            updateSelectedKeywordsCount();
+            updateKeywordCloud();
+            updateKeywordTrends();
         }
 
         function setupEventListeners() {
@@ -3667,15 +3692,18 @@
             console.log('updateKeywordTrends called - timePeriod:', timePeriod, 'stepSize:', stepSize);
             
             if (selectedKeywordsForTrends.length === 0) {
-                container.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
-                        <div class="text-center">
-                            <i class="fas fa-chart-line fa-3x mb-3"></i>
-                            <p>Select keywords above to see trends</p>
-                        </div>
-                    </div>
-                `;
-                return;
+                // Auto-select top 5 keywords if none are selected
+                const allKeywords = extractAllKeywords(allReviews);
+                const topKeywords = Object.entries(allKeywords)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 5)
+                    .map(([keyword]) => keyword);
+                
+                selectedKeywordsForTrends = topKeywords;
+                updateSelectedKeywordsCount();
+                updateKeywordCloud(); // Update cloud to show selections
+                
+                console.log('Auto-selected top 5 keywords:', topKeywords);
             }
             
             // Get filtered reviews based on global time period
