@@ -584,29 +584,39 @@
 
         .keyword-cloud-item {
             display: inline-block;
-            padding: 4px 12px;
-            margin: 2px;
+            padding: 6px 12px;
+            margin: 3px;
             border-radius: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #f8f9fa;
+            color: #495057;
             font-weight: 500;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             cursor: pointer;
-            border: none;
+            border: 1px solid #dee2e6;
             font-size: 12px;
         }
 
         .keyword-cloud-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            color: white;
+            background: #e9ecef;
+            color: #495057;
             text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .keyword-cloud-item.selected {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+        }
+
+        .keyword-cloud-item.selected:hover {
+            background: #0056b3;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.4);
         }
 
         .keyword-cloud-item.size-1 { font-size: 10px; padding: 3px 8px; }
@@ -1027,32 +1037,21 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Keywords List with Checkboxes and Pagination -->
+                                <!-- Keyword Cloud Selection -->
                                 <div class="mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
                                         <label class="form-label mb-0">
-                                            <i class="fas fa-check-square me-2"></i>Select Keywords
+                                            <i class="fas fa-cloud me-2"></i>Select Keywords
                                             <span class="badge bg-secondary ms-2" id="selectedKeywordsCount">0</span>
                                         </label>
                                         <div class="btn-group btn-group-sm" role="group" id="keywordsPagination">
                                             <!-- Pagination buttons will be added here -->
                                         </div>
                                     </div>
-                                    <div id="keywordsList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                                        <p class="text-muted text-center">No keywords available</p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Keyword Cloud -->
-                                <div class="mb-4">
-                                    <h6 class="mb-3">
-                                        <i class="fas fa-cloud me-2"></i>Keyword Cloud
-                                        <small class="text-muted">(Size indicates frequency)</small>
-                                    </h6>
                                     <div id="keywordCloud" class="keyword-cloud-container" style="min-height: 120px; padding: 1rem; border: 1px solid #e9ecef; border-radius: 8px; background: #f8f9fa;">
                                         <div class="text-center text-muted">
                                             <i class="fas fa-cloud fa-2x mb-2"></i>
-                                            <p>Select keywords above to see the cloud visualization</p>
+                                            <p>No keywords available</p>
                                         </div>
                                     </div>
                                 </div>
@@ -2862,6 +2861,7 @@
             try {
                 // Update keywords list for trends
                 updateKeywordsList();
+            updateKeywordCloud();
                 
                 // Update lists
                 updatePainPointsList(reviews);
@@ -3431,6 +3431,7 @@
         function changeKeywordsPage(page) {
             currentKeywordsPage = page;
             updateKeywordsList();
+            updateKeywordCloud();
         }
 
         // Toggle keyword selection for trends
@@ -3438,13 +3439,14 @@
             const checkbox = document.getElementById(`keyword-${keyword}`);
             
             if (checkbox.checked) {
-                selectedKeywordsForTrends.push(keyword);
-            } else {
+                    selectedKeywordsForTrends.push(keyword);
+                } else {
                 selectedKeywordsForTrends = selectedKeywordsForTrends.filter(k => k !== keyword);
             }
             
             updateSelectedKeywordsCount();
-            updateKeywordsList(); // Refresh to update disabled state
+            updateKeywordsList();
+            updateKeywordCloud(); // Refresh to update disabled state
             updateKeywordTrends();
             updateKeywordCloud(); // Auto-update chart
             updateKeywordCloud(); // Update keyword cloud
@@ -3454,19 +3456,28 @@
         function updateKeywordCloud() {
             const container = document.getElementById('keywordCloud');
             
-            if (selectedKeywordsForTrends.length === 0) {
+            // Get all available keywords from the current page
+            const currentPage = keywordsCurrentPage || 1;
+            const keywordsPerPage = 20;
+            const startIndex = (currentPage - 1) * keywordsPerPage;
+            const endIndex = startIndex + keywordsPerPage;
+            
+            // Get keywords for current page
+            const pageKeywords = getKeywordsForPage(currentPage, keywordsPerPage);
+            
+            if (pageKeywords.length === 0) {
                 container.innerHTML = `
                     <div class="text-center text-muted">
                         <i class="fas fa-cloud fa-2x mb-2"></i>
-                        <p>Select keywords above to see the cloud visualization</p>
+                        <p>No keywords available</p>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            // Get keyword frequencies
+            // Get keyword frequencies for all keywords on this page
             const keywordFrequencies = {};
-            selectedKeywordsForTrends.forEach(keyword => {
+            pageKeywords.forEach(({ keyword }) => {
                 keywordFrequencies[keyword] = getKeywordFrequency(keyword);
             });
 
@@ -3526,11 +3537,15 @@
 
         // Toggle keyword from cloud
         function toggleKeywordFromCloud(keyword) {
-            const checkbox = document.getElementById(`keyword-${keyword}`);
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-                toggleKeywordSelection(keyword);
+            if (selectedKeywordsForTrends.includes(keyword)) {
+                selectedKeywordsForTrends = selectedKeywordsForTrends.filter(k => k !== keyword);
+            } else {
+                selectedKeywordsForTrends.push(keyword);
             }
+            
+            updateSelectedKeywordsCount();
+            updateKeywordCloud(); // Refresh cloud to update selection state
+            updateKeywordTrends(); // Update trends chart
         }
 
         // Update selected keywords count badge
@@ -3547,6 +3562,7 @@
         function filterKeywords() {
             currentKeywordsPage = 1; // Reset to first page when searching
             updateKeywordsList();
+            updateKeywordCloud();
         }
 
         // Get current global time period
