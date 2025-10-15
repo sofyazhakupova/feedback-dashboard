@@ -1611,6 +1611,9 @@
         let currentPage = 1;
         let pageSize = 50;
         let totalPages = 1;
+        
+        // Active keyword filter state
+        let activeKeyword = null;
 
         // Keywords Manager Storage
         let customKeywords = {
@@ -1815,7 +1818,12 @@
             document.getElementById('sourceFilter').addEventListener('change', applyFilters);
             document.getElementById('userTypeFilter').addEventListener('change', applyFilters);
             document.getElementById('ratingFilter').addEventListener('change', applyFilters);
-            document.getElementById('keywordSearch').addEventListener('input', applyFilters);
+            document.getElementById('keywordSearch').addEventListener('input', function() {
+                // Clear active keyword when user types manually
+                activeKeyword = null;
+                applyFilters();
+                updateKeywordTags(); // Refresh keyword tags to remove highlighting
+            });
             document.getElementById('startDate').addEventListener('change', applyFilters);
             document.getElementById('endDate').addEventListener('change', applyFilters);
         }
@@ -3420,8 +3428,18 @@
             
             sortedKeywords.forEach(([keyword, count]) => {
                 const badge = document.createElement('span');
-                badge.className = 'badge bg-light text-dark me-2 mb-2';
-                badge.style.cssText = 'cursor: pointer; border: 1px solid var(--light-gray);';
+                
+                // Check if this keyword is currently active
+                const isActive = activeKeyword === keyword;
+                
+                if (isActive) {
+                    badge.className = 'badge bg-primary text-white me-2 mb-2';
+                    badge.style.cssText = 'cursor: pointer; border: 1px solid var(--primary-color); font-weight: bold;';
+                } else {
+                    badge.className = 'badge bg-light text-dark me-2 mb-2';
+                    badge.style.cssText = 'cursor: pointer; border: 1px solid var(--light-gray);';
+                }
+                
                 badge.innerHTML = `${keyword} (${count})`;
                 badge.onclick = () => addKeywordFilter(keyword);
                 keywordTags.appendChild(badge);
@@ -3431,10 +3449,13 @@
         function addKeywordFilter(keyword) {
             if (keyword === '') {
                 document.getElementById('keywordSearch').value = '';
+                activeKeyword = null;
             } else {
                 document.getElementById('keywordSearch').value = keyword;
+                activeKeyword = keyword;
             }
             applyFilters();
+            updateKeywordTags(); // Refresh the keyword tags to show highlighting
         }
 
         function updateSourceCount() {
@@ -3839,11 +3860,15 @@
             // Reset pagination
             currentPage = 1;
             
+            // Reset active keyword
+            activeKeyword = null;
+            
             document.getElementById('resultsCount').textContent = allReviews.length;
             document.getElementById('filterSummary').textContent = '';
             
             updateReviewsTable();
             updatePagination();
+            updateKeywordTags(); // Refresh keyword tags to remove highlighting
         }
 
         function removeSource(sourceId) {
