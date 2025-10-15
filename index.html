@@ -543,7 +543,7 @@
             z-index: 1020;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            padding: 1rem 0;
+            padding: 1rem 2rem;
             margin: -1rem 0 1rem 0;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
@@ -556,7 +556,7 @@
             z-index: 1010;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            padding: 1rem 0;
+            padding: 1rem 2rem;
             margin: -1rem 0 1rem 0;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
@@ -575,13 +575,20 @@
             .sticky-top,
             .sticky-time-period {
                 margin-left: calc(-50vw + 50%);
-                padding: 0.75rem 0;
+                padding: 0.75rem 1rem;
             }
             
             .sticky-top .container,
             .sticky-time-period .container {
                 padding-left: 10px;
                 padding-right: 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sticky-top,
+            .sticky-time-period {
+                padding: 0.5rem 0.75rem;
             }
         }
 
