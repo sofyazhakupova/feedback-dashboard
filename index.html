@@ -2396,22 +2396,37 @@
                 const ratings = [];
                 
                 groupReviews.forEach(review => {
+                    let rating = null;
+                    
                     // First try to use the review.rating field if it exists and is valid
                     if (review.rating && review.rating >= 1 && review.rating <= 5) {
-                        ratings.push(review.rating);
+                        rating = review.rating;
+                        console.log(`Using review.rating: ${rating} for review:`, review.content?.substring(0, 50) + '...');
                     } else {
                         // Fall back to extracting from content
                         const extractedRating = extractRating(review.content);
                         if (extractedRating && extractedRating >= 1 && extractedRating <= 5) {
-                            ratings.push(extractedRating);
+                            rating = extractedRating;
+                            console.log(`Using extracted rating: ${rating} for review:`, review.content?.substring(0, 50) + '...');
+                        } else {
+                            console.log(`No valid rating found for review:`, review.content?.substring(0, 50) + '...');
                         }
+                    }
+                    
+                    if (rating !== null) {
+                        ratings.push(rating);
                     }
                 });
                 
                 if (ratings.length > 0) {
-                    const averageRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+                    const sum = ratings.reduce((a, b) => a + b, 0);
+                    const averageRating = sum / ratings.length;
+                    console.log(`Date ${date}: ${ratings.length} ratings [${ratings.join(', ')}], sum: ${sum}, average: ${averageRating}`);
+                    
                     validDates.push(date);
                     overallRatings.push(averageRating);
+                } else {
+                    console.log(`Date ${date}: No valid ratings found`);
                 }
             });
             
@@ -3888,21 +3903,38 @@
         function extractRating(message) {
             if (!message) return null;
             
-            // Look for explicit ratings
+            // Look for explicit ratings - be more restrictive to avoid false matches
             const ratingPatterns = [
                 /(\d+)\s*\/\s*5/i,
                 /(\d+)\s*out\s*of\s*5/i,
                 /(\d+)\s*stars?/i,
                 /rating[:\s]*(\d+)/i,
-                /(\d+)\s*\/\s*10/i
+                /(\d+)\s*\/\s*10/i,
+                /★{1,5}/i,  // Star symbols
+                /⭐{1,5}/i   // Star emojis
             ];
             
             for (const pattern of ratingPatterns) {
                 const match = message.match(pattern);
                 if (match) {
-                    let rating = parseInt(match[1]);
+                    let rating;
+                    
+                    // Handle star patterns differently
+                    if (pattern.source.includes('★') || pattern.source.includes('⭐')) {
+                        rating = match[0].length; // Count of stars
+                        console.log(`Extracted star rating: ${rating} from text: "${match[0]}" in message: "${message.substring(0, 100)}..."`);
+                    } else {
+                        rating = parseInt(match[1]);
+                        console.log(`Extracted rating: ${rating} from text: "${match[0]}" in message: "${message.substring(0, 100)}..."`);
+                    }
+                    
                     if (rating > 10) rating = Math.round(rating / 2); // Convert 10-point to 5-point
-                    if (rating >= 1 && rating <= 5) return rating;
+                    if (rating >= 1 && rating <= 5) {
+                        console.log(`Valid rating found: ${rating}`);
+                        return rating;
+                    } else {
+                        console.log(`Invalid rating: ${rating} (not between 1-5)`);
+                    }
                 }
             }
             
