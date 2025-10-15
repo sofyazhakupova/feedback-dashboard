@@ -477,6 +477,40 @@
         .sort-arrow.desc::after {
             content: " ↓";
         }
+
+        /* Dashboard metric cards styling */
+        .metric-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 123, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .change-indicator {
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .change-indicator.positive {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .change-indicator.negative {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .change-indicator.neutral {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -570,36 +604,69 @@
 
                 <!-- Top Metrics Row -->
                 <div class="row mb-4">
-                    <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="col-lg-4 col-md-6 mb-4">
                         <div class="card metric-card h-100">
-                            <div class="card-body text-center">
-                                <i class="fas fa-star fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Avg Rating (3M)</h4>
-                                <h2 id="total-avg-rating">0.0</h2>
-                                <small style="color: var(--medium-gray);" id="total-rating-change">No change</small>
-                                <div id="total-rating-trend" style="height: 40px; margin-top: 8px;"></div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon me-3">
+                                            <i class="fas fa-star fa-2x" style="color: #ffc107;"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="card-title mb-1 text-muted">Overall Rating</h6>
+                                            <h3 class="mb-0" id="total-avg-rating">0.0</h3>
+                                            <small class="text-muted">Last 3 months</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="change-indicator mb-2" id="total-rating-change">No change</div>
+                                        <div id="total-rating-trend" style="height: 40px; width: 80px;"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="col-lg-4 col-md-6 mb-4">
                         <div class="card metric-card h-100">
-                            <div class="card-body text-center">
-                                <i class="fab fa-google-play fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Google Play (3M)</h4>
-                                <h2 id="playstore-avg-rating">0.0</h2>
-                                <small style="color: var(--medium-gray);" id="playstore-rating-change">No change</small>
-                                <div id="playstore-rating-trend" style="height: 40px; margin-top: 8px;"></div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon me-3">
+                                            <i class="fab fa-google-play fa-2x" style="color: #34a853;"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="card-title mb-1 text-muted">Google Play</h6>
+                                            <h3 class="mb-0" id="playstore-avg-rating">0.0</h3>
+                                            <small class="text-muted">Last 3 months</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="change-indicator mb-2" id="playstore-rating-change">No change</div>
+                                        <div id="playstore-rating-trend" style="height: 40px; width: 80px;"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="col-lg-4 col-md-6 mb-4">
                         <div class="card metric-card h-100">
-                            <div class="card-body text-center">
-                                <i class="fab fa-apple fa-2x mb-3" style="color: var(--primary-black);"></i>
-                                <h4 class="card-title">Apple Store (3M)</h4>
-                                <h2 id="appstore-avg-rating">0.0</h2>
-                                <small style="color: var(--medium-gray);" id="appstore-rating-change">No change</small>
-                                <div id="appstore-rating-trend" style="height: 40px; margin-top: 8px;"></div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon me-3">
+                                            <i class="fab fa-apple fa-2x" style="color: #007aff;"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="card-title mb-1 text-muted">Apple Store</h6>
+                                            <h3 class="mb-0" id="appstore-avg-rating">0.0</h3>
+                                            <small class="text-muted">Last 3 months</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="change-indicator mb-2" id="appstore-rating-change">No change</div>
+                                        <div id="appstore-rating-trend" style="height: 40px; width: 80px;"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1899,8 +1966,11 @@
                 document.getElementById('appstore-avg-rating').textContent = '0.0';
                 // Clear comparison and trend charts
                 document.getElementById('total-rating-change').textContent = 'No data';
+                document.getElementById('total-rating-change').className = 'change-indicator mb-2 neutral';
                 document.getElementById('playstore-rating-change').textContent = 'No data';
+                document.getElementById('playstore-rating-change').className = 'change-indicator mb-2 neutral';
                 document.getElementById('appstore-rating-change').textContent = 'No data';
+                document.getElementById('appstore-rating-change').className = 'change-indicator mb-2 neutral';
                 document.getElementById('total-rating-trend').innerHTML = '';
                 document.getElementById('playstore-rating-trend').innerHTML = '';
                 document.getElementById('appstore-rating-trend').innerHTML = '';
@@ -1974,15 +2044,18 @@
         function updateRatingComparison(elementId, current, previous) {
             const element = document.getElementById(elementId);
             
+            // Reset classes
+            element.className = 'change-indicator mb-2';
+            
             if (current === 0 && previous === 0) {
                 element.textContent = 'No data';
-                element.style.color = 'var(--medium-gray)';
+                element.classList.add('neutral');
                 return;
             }
             
             if (previous === 0) {
                 element.textContent = 'New';
-                element.style.color = 'var(--success)';
+                element.classList.add('positive');
                 return;
             }
             
@@ -1992,11 +2065,11 @@
             element.textContent = `${sign}${difference.toFixed(1)}`;
             
             if (difference > 0.1) {
-                element.style.color = 'var(--success)'; // Green for improvement
+                element.classList.add('positive'); // Green for improvement
             } else if (difference < -0.1) {
-                element.style.color = 'var(--danger)'; // Red for decline
+                element.classList.add('negative'); // Red for decline
             } else {
-                element.style.color = 'var(--medium-gray)'; // Gray for no significant change
+                element.classList.add('neutral'); // Gray for no significant change
             }
         }
 
