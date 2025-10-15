@@ -2235,48 +2235,63 @@
             
             // Overall rating trace (all reviews)
             const overallData = groupReviewsByTimePeriod(reviews, stepSize);
-            traces.push({
-                x: overallData.dates,
-                y: overallData.overallRatings,
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: 'Overall Rating',
-                line: { color: '#ffc107', width: 3 },
-                marker: { size: 6, color: '#ffc107' }
-            });
+            console.log('Overall data:', overallData);
+            
+            if (overallData.dates.length > 0 && overallData.overallRatings.length > 0) {
+                traces.push({
+                    x: overallData.dates,
+                    y: overallData.overallRatings,
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Overall Rating',
+                    line: { color: '#ffc107', width: 3 },
+                    marker: { size: 6, color: '#ffc107' }
+                });
+            }
             
             // Google Play rating trace
             const googlePlayReviews = reviews.filter(r => r.source === 'google_play');
+            console.log('Google Play reviews:', googlePlayReviews.length);
             if (googlePlayReviews.length > 0) {
                 const googlePlayData = groupReviewsByTimePeriod(googlePlayReviews, stepSize);
-                traces.push({
-                    x: googlePlayData.dates,
-                    y: googlePlayData.overallRatings,
-                    type: 'scatter',
-                    mode: 'lines+markers',
-                    name: 'Google Play',
-                    line: { color: '#34a853', width: 2 },
-                    marker: { size: 5, color: '#34a853' }
-                });
+                console.log('Google Play data:', googlePlayData);
+                if (googlePlayData.dates.length > 0 && googlePlayData.overallRatings.length > 0) {
+                    traces.push({
+                        x: googlePlayData.dates,
+                        y: googlePlayData.overallRatings,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Google Play',
+                        line: { color: '#34a853', width: 2 },
+                        marker: { size: 5, color: '#34a853' }
+                    });
+                }
             }
             
             // Apple Store rating trace
             const appStoreReviews = reviews.filter(r => r.source === 'app_store');
+            console.log('Apple Store reviews:', appStoreReviews.length);
             if (appStoreReviews.length > 0) {
                 const appStoreData = groupReviewsByTimePeriod(appStoreReviews, stepSize);
-                traces.push({
-                    x: appStoreData.dates,
-                    y: appStoreData.overallRatings,
-                    type: 'scatter',
-                    mode: 'lines+markers',
-                    name: 'Apple Store',
-                    line: { color: '#007aff', width: 2 },
-                    marker: { size: 5, color: '#007aff' }
-                });
+                console.log('Apple Store data:', appStoreData);
+                if (appStoreData.dates.length > 0 && appStoreData.overallRatings.length > 0) {
+                    traces.push({
+                        x: appStoreData.dates,
+                        y: appStoreData.overallRatings,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Apple Store',
+                        line: { color: '#007aff', width: 2 },
+                        marker: { size: 5, color: '#007aff' }
+                    });
+                }
             }
             
             // Check if we have any data to display
-            if (traces.length === 0 || traces.every(trace => trace.y.every(rating => rating === 0))) {
+            console.log('Total traces created:', traces.length);
+            console.log('Traces:', traces);
+            
+            if (traces.length === 0) {
                 container.innerHTML = `
                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
                         <div class="text-center">
@@ -2318,7 +2333,12 @@
             };
             
             // Create the chart
-            Plotly.newPlot(container, traces, layout, {responsive: true});
+            console.log('Creating Plotly chart with layout:', layout);
+            Plotly.newPlot(container, traces, layout, {responsive: true}).then(() => {
+                console.log('Chart created successfully');
+            }).catch(error => {
+                console.error('Error creating chart:', error);
+            });
         }
 
         // Group reviews by time period for charting
@@ -2349,11 +2369,27 @@
             const dates = Object.keys(groups).sort();
             const overallRatings = dates.map(date => {
                 const groupReviews = groups[date];
-                const ratings = groupReviews.map(r => extractRating(r.content) || r.rating).filter(r => r > 0);
-                return ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+                const ratings = groupReviews.map(r => {
+                    const rating = extractRating(r.content) || r.rating;
+                    return rating && rating >= 1 && rating <= 5 ? rating : null;
+                }).filter(r => r !== null);
+                
+                return ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+            }).filter(r => r !== null);
+            
+            // Filter out dates that have no valid ratings
+            const validDates = dates.filter((date, index) => {
+                const groupReviews = groups[date];
+                const ratings = groupReviews.map(r => {
+                    const rating = extractRating(r.content) || r.rating;
+                    return rating && rating >= 1 && rating <= 5 ? rating : null;
+                }).filter(r => r !== null);
+                return ratings.length > 0;
             });
             
-            return { dates, overallRatings };
+            console.log(`Grouped ${reviews.length} reviews into ${validDates.length} time periods with ratings:`, overallRatings);
+            
+            return { dates: validDates, overallRatings };
         }
 
         function updateDashboardMetrics(reviews) {
