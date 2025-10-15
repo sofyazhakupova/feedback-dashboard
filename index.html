@@ -852,18 +852,43 @@
                 
                 <!-- Time Period Selector -->
                 <div class="filter-section mb-4 sticky-time-period">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <h5 class="mb-0">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Time Period
-                            </h5>
-                            <small class="text-muted">Select a time range to analyze your feedback data</small>
-                        </div>
-                    </div>
                     <div class="row">
                         <div class="col-12">
-                            <div class="btn-group w-100 time-period-tabs" role="group">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <!-- Calendar Button for Custom Date Range -->
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary" type="button" id="customDateRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                        Custom Range
+                                    </button>
+                                    <ul class="dropdown-menu p-3" style="min-width: 300px;">
+                                        <li>
+                                            <div class="mb-3">
+                                                <label class="form-label small">Start Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="startDate">
+                        </div>
+                                        </li>
+                                        <li>
+                                            <div class="mb-3">
+                                                <label class="form-label small">End Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="endDate">
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-primary btn-sm" onclick="applyCustomDateRange()">
+                                                    <i class="fas fa-check me-1"></i>Apply
+                                                </button>
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="clearCustomDateRange()">
+                                                    <i class="fas fa-times me-1"></i>Clear
+                                                </button>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Quick Period Tabs -->
+                                <div class="btn-group time-period-tabs" role="group">
                                 <input type="radio" class="btn-check" name="timePeriod" id="last7days" value="7">
                                 <label class="btn btn-outline-primary" for="last7days">
                                     <i class="fas fa-calendar-week me-2"></i>
@@ -905,6 +930,7 @@
                                     <span class="period-label">All Time</span>
                                     <small class="period-count" id="count-0">0</small>
                                 </label>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -1121,18 +1147,43 @@
 
                 <!-- Time Period Selector for List -->
                 <div class="filter-section mb-4 sticky-time-period">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <h5 class="mb-0">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Time Period
-                            </h5>
-                            <small class="text-muted">Select a time range to analyze your feedback data</small>
-                        </div>
-                    </div>
                     <div class="row">
                         <div class="col-12">
-                            <div class="btn-group w-100 time-period-tabs" role="group">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <!-- Calendar Button for Custom Date Range -->
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary" type="button" id="customDateRangeDropdownList" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                        Custom Range
+                                    </button>
+                                    <ul class="dropdown-menu p-3" style="min-width: 300px;">
+                                        <li>
+                                            <div class="mb-3">
+                                                <label class="form-label small">Start Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="startDateList">
+                        </div>
+                                        </li>
+                                        <li>
+                                            <div class="mb-3">
+                                                <label class="form-label small">End Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="endDateList">
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-primary btn-sm" onclick="applyCustomDateRangeList()">
+                                                    <i class="fas fa-check me-1"></i>Apply
+                                                </button>
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="clearCustomDateRangeList()">
+                                                    <i class="fas fa-times me-1"></i>Clear
+                                                </button>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- Quick Period Tabs -->
+                                <div class="btn-group time-period-tabs" role="group">
                                 <input type="radio" class="btn-check" name="timePeriodList" id="last7daysList" value="7">
                                 <label class="btn btn-outline-primary" for="last7daysList">
                                     <i class="fas fa-calendar-week me-2"></i>
@@ -1174,6 +1225,7 @@
                                     <span class="period-label">All Time</span>
                                     <small class="period-count" id="count-0-list">0</small>
                                 </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4372,6 +4424,82 @@
             
             // Close dropdown
             const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('customDateRangeDropdown'));
+            if (dropdown) dropdown.hide();
+        }
+
+        function applyCustomDateRangeList() {
+            const startDateEl = document.getElementById('startDateList');
+            const endDateEl = document.getElementById('endDateList');
+            
+            if (!startDateEl || !endDateEl) {
+                console.log('Date range elements not found');
+                return;
+            }
+            
+            const startDate = startDateEl.value;
+            const endDate = endDateEl.value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (start > end) {
+                alert('Start date must be before end date');
+                return;
+            }
+            
+            // Filter reviews by custom date range
+            const filteredReviews = allReviews.filter(review => {
+                const reviewDate = new Date(review.date);
+                return reviewDate >= start && reviewDate <= end;
+            });
+            
+            currentFilteredReviews = filteredReviews;
+            currentPage = 1; // Reset to first page
+            
+            // Clear time period selections
+            document.querySelectorAll('input[name="timePeriodList"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            updateFilteredTable(filteredReviews);
+            updatePagination();
+            
+            // Update results count
+            document.getElementById('resultsCount').innerHTML = ` ${filteredReviews.length} `;
+            document.getElementById('filterSummary').textContent = `Custom Date Range: ${startDate} to ${endDate}`;
+            
+            // Close dropdown
+            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('customDateRangeDropdownList'));
+            if (dropdown) dropdown.hide();
+        }
+
+        function clearCustomDateRangeList() {
+            const startDateEl = document.getElementById('startDateList');
+            const endDateEl = document.getElementById('endDateList');
+            
+            if (startDateEl) startDateEl.value = '';
+            if (endDateEl) endDateEl.value = '';
+            
+            // Reset to all time
+            const allTimeEl = document.getElementById('allTimeList');
+            if (allTimeEl) allTimeEl.checked = true;
+            currentFilteredReviews = allReviews;
+            currentPage = 1;
+            
+            updateFilteredTable(allReviews);
+            updatePagination();
+            
+            // Update results count
+            document.getElementById('resultsCount').innerHTML = ` ${allReviews.length} `;
+            document.getElementById('filterSummary').textContent = 'All Time';
+            
+            // Close dropdown
+            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('customDateRangeDropdownList'));
             if (dropdown) dropdown.hide();
         }
 
