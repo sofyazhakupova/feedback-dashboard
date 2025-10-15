@@ -1917,6 +1917,7 @@
             updateSourceList();
             updateDetailedChart(); // Initialize the detailed chart
             updateSourceCount();
+            updateSmartSuggestions(); // Update keywords manager suggestions
             
             // Update keyword trends chart
             updateKeywordTrends();
@@ -1969,6 +1970,7 @@
                 updatePendingCount();
                 updateSourceList();
                 updateSourceCount();
+                updateSmartSuggestions(); // Update keywords manager suggestions
                 
                 alert('✅ All data has been cleared successfully!');
             }
@@ -3674,6 +3676,7 @@
                         updateDashboardMetricsStatic(allReviews);
                         updateReviewsTable();
                         updateSourceFilter();
+                        updateSmartSuggestions(); // Update keywords manager suggestions
 
                         // Close modal
                         const modal = bootstrap.Modal.getInstance(document.getElementById('addSourceModal'));
@@ -4427,6 +4430,7 @@
                     updateReviewsTable();
                     updateSourceFilter();
                     updatePendingCount();
+                    updateSmartSuggestions(); // Update keywords manager suggestions
                     
                     alert(`✅ Data source "${source.name}" and its ${source.data.length} reviews have been removed successfully!`);
                 }
@@ -4583,6 +4587,7 @@
             updateReviewsTable();
             updateSourceFilter();
             updatePendingCount();
+            updateSmartSuggestions(); // Update keywords manager suggestions
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
             modal.hide();
@@ -4709,6 +4714,7 @@
             updateDashboardMetricsStatic(allReviews);
             updateReviewsTable();
             updateSourceFilter();
+            updateSmartSuggestions(); // Update keywords manager suggestions
             
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('viewEditModal'));
@@ -4731,6 +4737,7 @@
                 updateDashboardMetricsStatic(allReviews);
                 updateReviewsTable();
                 updateSourceFilter();
+                updateSmartSuggestions(); // Update keywords manager suggestions
                 
                 // Close modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('viewEditModal'));
