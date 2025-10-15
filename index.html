@@ -3363,25 +3363,18 @@
 
         // Get current step size based on time period
         function getCurrentStepSize() {
-            const timePeriod = getCurrentTimePeriod();
             const stepSizeSelector = document.getElementById('stepSizeSelector');
             
-            // Auto-set step size based on time period
-            if (timePeriod === '7' || timePeriod === '30') {
-                stepSizeSelector.value = 'day';
-            } else if (timePeriod === '90' || timePeriod === '180') {
-                stepSizeSelector.value = 'week';
-            } else if (timePeriod === '365' || timePeriod === 'all') {
-                stepSizeSelector.value = 'week'; // Default to week, user can change
-            }
-            
-            return stepSizeSelector ? stepSizeSelector.value : 'week';
+            // Return the current selected value, default to 'month' if not found
+            return stepSizeSelector ? stepSizeSelector.value : 'month';
         }
 
         function updateKeywordTrends() {
             const container = document.getElementById('keywordTrendsChart');
             const timePeriod = getCurrentTimePeriod();
             const stepSize = getCurrentStepSize();
+            
+            console.log('updateKeywordTrends called - timePeriod:', timePeriod, 'stepSize:', stepSize);
             
             if (selectedKeywordsForTrends.length === 0) {
                 container.innerHTML = `
