@@ -545,6 +545,9 @@
             border-bottom: 1px solid #e9ecef;
             padding: 1rem 0;
             margin: -1rem 0 1rem 0;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            box-shadow: none;
         }
 
         .sticky-time-period {
@@ -555,6 +558,31 @@
             border-bottom: 1px solid #e9ecef;
             padding: 1rem 0;
             margin: -1rem 0 1rem 0;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            box-shadow: none;
+        }
+
+        /* Ensure content inside sticky sections has proper padding */
+        .sticky-top .container,
+        .sticky-time-period .container {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        /* Responsive adjustments for sticky sections */
+        @media (max-width: 768px) {
+            .sticky-top,
+            .sticky-time-period {
+                margin-left: calc(-50vw + 50%);
+                padding: 0.75rem 0;
+            }
+            
+            .sticky-top .container,
+            .sticky-time-period .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
         }
 
         /* Time Period Tabs Styling */
