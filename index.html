@@ -573,6 +573,49 @@
             padding-right: 24px;
         }
 
+        /* Keyword Cloud Styling */
+        .keyword-cloud-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keyword-cloud-item {
+            display: inline-block;
+            padding: 4px 12px;
+            margin: 2px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 12px;
+        }
+
+        .keyword-cloud-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        .keyword-cloud-item.selected {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+        }
+
+        .keyword-cloud-item.size-1 { font-size: 10px; padding: 3px 8px; }
+        .keyword-cloud-item.size-2 { font-size: 12px; padding: 4px 10px; }
+        .keyword-cloud-item.size-3 { font-size: 14px; padding: 5px 12px; }
+        .keyword-cloud-item.size-4 { font-size: 16px; padding: 6px 14px; }
+        .keyword-cloud-item.size-5 { font-size: 18px; padding: 7px 16px; }
+        .keyword-cloud-item.size-6 { font-size: 20px; padding: 8px 18px; }
+
         .sticky-time-period .row {
             margin-left: 2rem;
             margin-right: 2rem;
@@ -948,7 +991,7 @@
                                             <i class="fas fa-chart-line me-2"></i>
                                             Keyword Trends & Analysis
                                         </h5>
-                                        <small class="text-muted">Select keywords to analyze trends over time (max 5)</small>
+                                        <small class="text-muted">Select keywords to analyze trends over time</small>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="d-flex justify-content-end">
@@ -988,7 +1031,7 @@
                                 <div class="mb-4">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <label class="form-label mb-0">
-                                            <i class="fas fa-check-square me-2"></i>Select Keywords (max 5)
+                                            <i class="fas fa-check-square me-2"></i>Select Keywords
                                             <span class="badge bg-secondary ms-2" id="selectedKeywordsCount">0</span>
                                         </label>
                                         <div class="btn-group btn-group-sm" role="group" id="keywordsPagination">
@@ -997,6 +1040,20 @@
                                     </div>
                                     <div id="keywordsList" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
                                         <p class="text-muted text-center">No keywords available</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Keyword Cloud -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-cloud me-2"></i>Keyword Cloud
+                                        <small class="text-muted">(Size indicates frequency)</small>
+                                    </h6>
+                                    <div id="keywordCloud" class="keyword-cloud-container" style="min-height: 120px; padding: 1rem; border: 1px solid #e9ecef; border-radius: 8px; background: #f8f9fa;">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-cloud fa-2x mb-2"></i>
+                                            <p>Select keywords above to see the cloud visualization</p>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -2046,6 +2103,7 @@
             
             // Update keyword trends chart
             updateKeywordTrends();
+            updateKeywordCloud();
             
             console.log('UI update completed');
         }
@@ -2219,6 +2277,7 @@
             
             // Update keyword trends when global date selector changes
             updateKeywordTrends();
+            updateKeywordCloud();
         }
 
         function updateListForPeriod(days) {
@@ -3300,7 +3359,7 @@
                 // Create checkboxes
                 const checkboxesHTML = pageKeywords.map(({ keyword, count }) => {
                     const isSelected = selectedKeywordsForTrends.includes(keyword);
-                    const isDisabled = !isSelected && selectedKeywordsForTrends.length >= 5;
+                    const isDisabled = false; // Removed 5 max limit
                     
                     return `
                         <div class="form-check mb-2">
@@ -3379,20 +3438,99 @@
             const checkbox = document.getElementById(`keyword-${keyword}`);
             
             if (checkbox.checked) {
-                if (selectedKeywordsForTrends.length < 5) {
-                    selectedKeywordsForTrends.push(keyword);
-                } else {
-                    checkbox.checked = false;
-                    alert('Maximum 5 keywords can be selected for trends analysis.');
-                    return;
-                }
+                selectedKeywordsForTrends.push(keyword);
             } else {
                 selectedKeywordsForTrends = selectedKeywordsForTrends.filter(k => k !== keyword);
             }
             
             updateSelectedKeywordsCount();
             updateKeywordsList(); // Refresh to update disabled state
-            updateKeywordTrends(); // Auto-update chart
+            updateKeywordTrends();
+            updateKeywordCloud(); // Auto-update chart
+            updateKeywordCloud(); // Update keyword cloud
+        }
+
+        // Update keyword cloud visualization
+        function updateKeywordCloud() {
+            const container = document.getElementById('keywordCloud');
+            
+            if (selectedKeywordsForTrends.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-cloud fa-2x mb-2"></i>
+                        <p>Select keywords above to see the cloud visualization</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get keyword frequencies
+            const keywordFrequencies = {};
+            selectedKeywordsForTrends.forEach(keyword => {
+                keywordFrequencies[keyword] = getKeywordFrequency(keyword);
+            });
+
+            // Sort keywords by frequency
+            const sortedKeywords = Object.entries(keywordFrequencies)
+                .sort(([,a], [,b]) => b - a);
+
+            // Generate cloud HTML
+            const cloudHTML = sortedKeywords.map(([keyword, frequency]) => {
+                const sizeClass = getSizeClass(frequency, Math.max(...Object.values(keywordFrequencies)));
+                const isSelected = selectedKeywordsForTrends.includes(keyword);
+                
+                return `
+                    <span class="keyword-cloud-item ${sizeClass} ${isSelected ? 'selected' : ''}" 
+                          onclick="toggleKeywordFromCloud('${keyword}')" 
+                          title="Frequency: ${frequency} mentions">
+                        ${keyword}
+                    </span>
+                `;
+            }).join('');
+
+            container.innerHTML = cloudHTML;
+        }
+
+        // Get keyword frequency in reviews
+        function getKeywordFrequency(keyword) {
+            if (!allReviews || allReviews.length === 0) return 0;
+            
+            const keywordLower = keyword.toLowerCase();
+            let count = 0;
+            
+            allReviews.forEach(review => {
+                const content = (review.content || '').toLowerCase();
+                const author = (review.author || '').toLowerCase();
+                
+                // Count occurrences in content and author
+                const contentMatches = (content.match(new RegExp(keywordLower, 'g')) || []).length;
+                const authorMatches = (author.match(new RegExp(keywordLower, 'g')) || []).length;
+                
+                count += contentMatches + authorMatches;
+            });
+            
+            return count;
+        }
+
+        // Get size class based on frequency
+        function getSizeClass(frequency, maxFrequency) {
+            if (frequency === 0) return 'size-1';
+            
+            const ratio = frequency / maxFrequency;
+            if (ratio >= 0.8) return 'size-6';
+            if (ratio >= 0.6) return 'size-5';
+            if (ratio >= 0.4) return 'size-4';
+            if (ratio >= 0.2) return 'size-3';
+            return 'size-2';
+        }
+
+        // Toggle keyword from cloud
+        function toggleKeywordFromCloud(keyword) {
+            const checkbox = document.getElementById(`keyword-${keyword}`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                toggleKeywordSelection(keyword);
+            }
         }
 
         // Update selected keywords count badge
