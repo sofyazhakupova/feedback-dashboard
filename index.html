@@ -827,10 +827,34 @@
                 <div class="filter-section">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h5 class="mb-0">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Time Period
-                            </h5>
+                            <div class="d-flex align-items-center">
+                                <h5 class="mb-0 me-3">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    Time Period
+                                </h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" id="customDateRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Custom Date Range">
+                                        <i class="fas fa-calendar-day"></i>
+                                    </button>
+                                    <div class="dropdown-menu p-3" style="min-width: 300px;">
+                                        <h6 class="dropdown-header">Custom Date Range</h6>
+                                        <div class="row mb-2">
+                                            <div class="col-6">
+                                                <label class="form-label small">Start Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="startDate">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small">End Date</label>
+                                                <input type="date" class="form-control form-control-sm" id="endDate">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm" onclick="applyCustomDateRange()">Apply</button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="clearCustomDateRange()">Clear</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <div class="btn-group w-100" role="group">
@@ -896,18 +920,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Date Range</label>
-                            <div class="row">
-                                <div class="col-6">
-                                    <input type="date" class="form-control" id="startDate">
-                                </div>
-                                <div class="col-6">
-                                    <input type="date" class="form-control" id="endDate">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <div class="col-md-12 mb-3 d-flex justify-content-end">
                             <button class="btn btn-outline-secondary" onclick="clearFilters()">
                                 <i class="fas fa-times me-2"></i>Clear All Filters
                             </button>
@@ -987,6 +1000,28 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-3">Show:</span>
+                        <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize()">
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="text-muted ms-2">per page</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span id="paginationInfo" class="text-muted me-3">Showing 1-50 of 0</span>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                                <!-- Pagination buttons will be generated here -->
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -1571,6 +1606,11 @@
         // Sorting state
         let currentSortColumn = null;
         let currentSortDirection = null;
+        
+        // Pagination state
+        let currentPage = 1;
+        let pageSize = 50;
+        let totalPages = 1;
 
         // Keywords Manager Storage
         let customKeywords = {
@@ -1644,6 +1684,7 @@
             console.log('Updating UI with loaded data...');
             updateDashboardMetrics(allReviews);
             updateReviewsTable();
+            updatePagination();
             updateSourceFilter();
             updatePendingCount();
             updateSourceList();
@@ -3463,7 +3504,12 @@
                 return;
             }
 
-            reviewsToShow.forEach(review => {
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedReviews = reviewsToShow.slice(startIndex, endIndex);
+
+            paginatedReviews.forEach(review => {
                 const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
@@ -3549,7 +3595,12 @@
             const tbody = document.getElementById('reviewsTableBody');
             tbody.innerHTML = '';
 
-            reviews.forEach(review => {
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedReviews = reviews.slice(startIndex, endIndex);
+
+            paginatedReviews.forEach(review => {
                 const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
@@ -3607,6 +3658,7 @@
             }
             
             updateFilteredTable(sortedReviews);
+            updatePagination();
         }
 
         function updateSortArrows(activeColumn, direction) {
@@ -3625,6 +3677,152 @@
             }
         }
 
+        function applyCustomDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (start > end) {
+                alert('Start date must be before end date');
+                return;
+            }
+            
+            // Filter reviews by custom date range
+            const filteredReviews = allReviews.filter(review => {
+                const reviewDate = new Date(review.date);
+                return reviewDate >= start && reviewDate <= end;
+            });
+            
+            currentFilteredReviews = filteredReviews;
+            currentPage = 1; // Reset to first page
+            
+            // Clear time period selections
+            document.querySelectorAll('input[name="timePeriodList"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            updateFilteredTable(filteredReviews);
+            updatePagination();
+            
+            // Update results count
+            document.getElementById('resultsCount').textContent = filteredReviews.length;
+            document.getElementById('filterSummary').textContent = `Custom Date Range: ${startDate} to ${endDate}`;
+            
+            // Close dropdown
+            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('customDateRangeDropdown'));
+            if (dropdown) dropdown.hide();
+        }
+
+        function clearCustomDateRange() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            
+            // Reset to all time
+            document.getElementById('allTimeList').checked = true;
+            currentFilteredReviews = allReviews;
+            currentPage = 1;
+            
+            updateFilteredTable(allReviews);
+            updatePagination();
+            
+            // Update results count
+            document.getElementById('resultsCount').textContent = allReviews.length;
+            document.getElementById('filterSummary').textContent = '';
+            
+            // Close dropdown
+            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('customDateRangeDropdown'));
+            if (dropdown) dropdown.hide();
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+            currentPage = 1; // Reset to first page
+            updatePagination();
+            updateFilteredTable(currentFilteredReviews);
+        }
+
+        function updatePagination() {
+            const totalItems = currentFilteredReviews.length;
+            totalPages = Math.ceil(totalItems / pageSize);
+            
+            // Update pagination info
+            const startItem = (currentPage - 1) * pageSize + 1;
+            const endItem = Math.min(currentPage * pageSize, totalItems);
+            document.getElementById('paginationInfo').textContent = `Showing ${startItem}-${endItem} of ${totalItems}`;
+            
+            // Generate pagination controls
+            const paginationControls = document.getElementById('paginationControls');
+            paginationControls.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">Previous</a>`;
+            paginationControls.appendChild(prevLi);
+            
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                const firstLi = document.createElement('li');
+                firstLi.className = 'page-item';
+                firstLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(1)">1</a>`;
+                paginationControls.appendChild(firstLi);
+                
+                if (startPage > 2) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    paginationControls.appendChild(ellipsisLi);
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>`;
+                paginationControls.appendChild(li);
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsisLi = document.createElement('li');
+                    ellipsisLi.className = 'page-item disabled';
+                    ellipsisLi.innerHTML = '<span class="page-link">...</span>';
+                    paginationControls.appendChild(ellipsisLi);
+                }
+                
+                const lastLi = document.createElement('li');
+                lastLi.className = 'page-item';
+                lastLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${totalPages})">${totalPages}</a>`;
+                paginationControls.appendChild(lastLi);
+            }
+            
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">Next</a>`;
+            paginationControls.appendChild(nextLi);
+        }
+
+        function goToPage(page) {
+            if (page < 1 || page > totalPages || page === currentPage) return;
+            
+            currentPage = page;
+            updatePagination();
+            updateFilteredTable(currentFilteredReviews);
+        }
+
         function clearFilters() {
             document.getElementById('sourceFilter').value = '';
             document.getElementById('userTypeFilter').value = '';
@@ -3638,10 +3836,14 @@
             currentSortDirection = null;
             updateSortArrows(null, null);
             
+            // Reset pagination
+            currentPage = 1;
+            
             document.getElementById('resultsCount').textContent = allReviews.length;
             document.getElementById('filterSummary').textContent = '';
             
             updateReviewsTable();
+            updatePagination();
         }
 
         function removeSource(sourceId) {
