@@ -1817,7 +1817,7 @@
                 // Clear active keyword when user types manually
                 activeKeyword = null;
                 applyFilters();
-                updateKeywordTags(); // Refresh keyword tags to remove highlighting
+                generateKeywordTags(); // Refresh keyword tags to remove highlighting
             });
             document.getElementById('startDate').addEventListener('change', applyFilters);
             document.getElementById('endDate').addEventListener('change', applyFilters);
@@ -1889,7 +1889,7 @@
             updateFilteredTable(filteredReviews);
             
             // Update results count
-            document.getElementById('resultsCount').innerHTML = filteredReviews.length;
+            document.getElementById('resultsCount').innerHTML = ` ${filteredReviews.length} `;
         }
 
         function updateDashboardMetrics(reviews) {
@@ -3450,7 +3450,7 @@
                 activeKeyword = keyword;
             }
             applyFilters();
-            updateKeywordTags(); // Refresh the keyword tags to show highlighting
+            generateKeywordTags(); // Refresh the keyword tags to show highlighting
         }
 
         function updateSourceCount() {
@@ -3591,7 +3591,7 @@
             });
 
             // Update results count
-            document.getElementById('resultsCount').innerHTML = filteredReviews.length;
+            document.getElementById('resultsCount').innerHTML = ` ${filteredReviews.length} `;
             
             // Update filter summary
             const filters = [];
@@ -3728,7 +3728,7 @@
             updatePagination();
             
             // Update results count
-            document.getElementById('resultsCount').innerHTML = filteredReviews.length;
+            document.getElementById('resultsCount').innerHTML = ` ${filteredReviews.length} `;
             document.getElementById('filterSummary').textContent = `Custom Date Range: ${startDate} to ${endDate}`;
             
             // Close dropdown
@@ -3749,7 +3749,7 @@
             updatePagination();
             
             // Update results count
-            document.getElementById('resultsCount').innerHTML = allReviews.length;
+            document.getElementById('resultsCount').innerHTML = ` ${allReviews.length} `;
             document.getElementById('filterSummary').textContent = '';
             
             // Close dropdown
@@ -3858,12 +3858,12 @@
             // Reset active keyword
             activeKeyword = null;
             
-            document.getElementById('resultsCount').innerHTML = allReviews.length;
+            document.getElementById('resultsCount').innerHTML = ` ${allReviews.length} `;
             document.getElementById('filterSummary').textContent = '';
             
             updateReviewsTable();
             updatePagination();
-            updateKeywordTags(); // Refresh keyword tags to remove highlighting
+            generateKeywordTags(); // Refresh keyword tags to remove highlighting
         }
 
         function removeSource(sourceId) {
