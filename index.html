@@ -512,68 +512,99 @@
             color: #6c757d;
         }
 
-        /* Time Period Cards Styling */
-        .time-period-card {
-            position: relative;
+        /* Time Period Tabs Styling */
+        .time-period-tabs {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .time-period-card .btn-check {
-            position: absolute;
-            clip: rect(0, 0, 0, 0);
-            pointer-events: none;
-        }
-
-        .time-period-card .card {
-            cursor: pointer;
+        .time-period-tabs .btn {
+            border: none;
+            border-radius: 0;
+            padding: 0.75rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
             background: #fff;
+            color: #6c757d;
+            border-right: 1px solid #e9ecef;
         }
 
-        .time-period-card .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: rgba(0, 123, 255, 0.3);
+        .time-period-tabs .btn:last-child {
+            border-right: none;
         }
 
-        .time-period-card .btn-check:checked + .card {
-            border-color: #007bff;
-            background: linear-gradient(135deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 123, 255, 0.1) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        .time-period-tabs .btn:hover {
+            background: rgba(0, 123, 255, 0.1);
+            color: #007bff;
+            transform: translateY(-1px);
         }
 
-        .time-period-card .btn-check:checked + .card .text-primary {
-            color: #007bff !important;
+        .time-period-tabs .btn-check:checked + .btn {
+            background: #007bff;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
         }
 
-        .time-period-card .btn-check:checked + .card .text-secondary {
-            color: #007bff !important;
+        .time-period-tabs .btn i {
+            font-size: 1.1rem;
         }
 
-        .time-period-card .btn-check:checked + .card .text-success {
-            color: #007bff !important;
-        }
-
-        .period-count {
-            font-size: 1.25rem;
+        .time-period-tabs .period-label {
             font-weight: 600;
-            color: #007bff;
-            margin: 0.25rem 0;
+            font-size: 0.875rem;
         }
 
-        .time-period-card .btn-check:checked + .card .period-count {
-            color: #007bff;
+        .time-period-tabs .period-count {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            font-weight: 500;
         }
 
-        /* Responsive adjustments */
+        .time-period-tabs .btn-check:checked + .btn .period-count {
+            opacity: 1;
+        }
+
+        /* Responsive adjustments for tabs */
         @media (max-width: 768px) {
-            .time-period-card .card {
-                min-height: 120px;
+            .time-period-tabs .btn {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.8rem;
             }
             
-            .time-period-card .card-body {
-                padding: 1rem 0.75rem;
+            .time-period-tabs .btn i {
+                font-size: 1rem;
+            }
+            
+            .time-period-tabs .period-label {
+                font-size: 0.75rem;
+            }
+            
+            .time-period-tabs .period-count {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .time-period-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .time-period-tabs .btn {
+                flex: 1 1 50%;
+                border-right: 1px solid #e9ecef;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .time-period-tabs .btn:nth-child(even) {
+                border-right: none;
+            }
+            
+            .time-period-tabs .btn:nth-last-child(-n+2) {
+                border-bottom: none;
             }
         }
     </style>
@@ -647,7 +678,7 @@
                                         <div>
                                             <h6 class="card-title mb-1 text-muted">Overall Rating</h6>
                                             <h3 class="mb-0" id="total-avg-rating">0.0</h3>
-                                            <small class="text-muted">Last 3 months</small>
+                                            <small class="text-muted">Last 3 months vs Previous 3 months</small>
                                         </div>
                                     </div>
                                     <div class="text-end">
@@ -669,7 +700,7 @@
                                         <div>
                                             <h6 class="card-title mb-1 text-muted">Google Play</h6>
                                             <h3 class="mb-0" id="playstore-avg-rating">0.0</h3>
-                                            <small class="text-muted">Last 3 months</small>
+                                            <small class="text-muted">Last 3 months vs Previous 3 months</small>
                                         </div>
                                     </div>
                                     <div class="text-end">
@@ -691,7 +722,7 @@
                                         <div>
                                             <h6 class="card-title mb-1 text-muted">Apple Store</h6>
                                             <h3 class="mb-0" id="appstore-avg-rating">0.0</h3>
-                                            <small class="text-muted">Last 3 months</small>
+                                            <small class="text-muted">Last 3 months vs Previous 3 months</small>
                                         </div>
                                     </div>
                                     <div class="text-end">
@@ -710,89 +741,54 @@
                         <div class="col-12">
                             <h5 class="mb-0">
                                 <i class="fas fa-calendar-alt me-2"></i>
-                                Select Time Period
+                                Time Period
                             </h5>
-                            <small class="text-muted">Choose a time range to analyze your feedback data</small>
+                            <small class="text-muted">Select a time range to analyze your feedback data</small>
                         </div>
                     </div>
-                    <div class="row g-3">
-                        <!-- Primary Time Periods -->
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="time-period-card" data-period="7">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="btn-group w-100 time-period-tabs" role="group">
                                 <input type="radio" class="btn-check" name="timePeriod" id="last7days" value="7">
-                                <label class="card h-100" for="last7days">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-calendar-week fa-2x mb-2 text-primary"></i>
-                                        <h6 class="card-title mb-1">7 Days</h6>
-                                        <div class="period-count" id="count-7">0</div>
-                                        <small class="text-muted">Recent activity</small>
-                                    </div>
+                                <label class="btn btn-outline-primary" for="last7days">
+                                    <i class="fas fa-calendar-week me-2"></i>
+                                    <span class="period-label">7 Days</span>
+                                    <small class="period-count" id="count-7">0</small>
                                 </label>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="time-period-card" data-period="30">
+
                                 <input type="radio" class="btn-check" name="timePeriod" id="lastMonth" value="30">
-                                <label class="card h-100" for="lastMonth">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-calendar-alt fa-2x mb-2 text-primary"></i>
-                                        <h6 class="card-title mb-1">1 Month</h6>
-                                        <div class="period-count" id="count-30">0</div>
-                                        <small class="text-muted">Monthly view</small>
-                                    </div>
+                                <label class="btn btn-outline-primary" for="lastMonth">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    <span class="period-label">1 Month</span>
+                                    <small class="period-count" id="count-30">0</small>
                                 </label>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="time-period-card" data-period="90">
+
                                 <input type="radio" class="btn-check" name="timePeriod" id="last3Months" value="90">
-                                <label class="card h-100" for="last3Months">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-calendar-check fa-2x mb-2 text-primary"></i>
-                                        <h6 class="card-title mb-1">3 Months</h6>
-                                        <div class="period-count" id="count-90">0</div>
-                                        <small class="text-muted">Quarterly trend</small>
-                                    </div>
+                                <label class="btn btn-outline-primary" for="last3Months">
+                                    <i class="fas fa-calendar-check me-2"></i>
+                                    <span class="period-label">3 Months</span>
+                                    <small class="period-count" id="count-90">0</small>
                                 </label>
-                            </div>
-                        </div>
-                        <!-- Secondary Time Periods -->
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="time-period-card" data-period="180">
+
                                 <input type="radio" class="btn-check" name="timePeriod" id="last6Months" value="180">
-                                <label class="card h-100" for="last6Months">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-calendar-day fa-2x mb-2 text-secondary"></i>
-                                        <h6 class="card-title mb-1">6 Months</h6>
-                                        <div class="period-count" id="count-180">0</div>
-                                        <small class="text-muted">Half year</small>
-                                    </div>
+                                <label class="btn btn-outline-primary" for="last6Months">
+                                    <i class="fas fa-calendar-day me-2"></i>
+                                    <span class="period-label">6 Months</span>
+                                    <small class="period-count" id="count-180">0</small>
                                 </label>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="time-period-card" data-period="365">
+
                                 <input type="radio" class="btn-check" name="timePeriod" id="lastYear" value="365">
-                                <label class="card h-100" for="lastYear">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-calendar fa-2x mb-2 text-secondary"></i>
-                                        <h6 class="card-title mb-1">1 Year</h6>
-                                        <div class="period-count" id="count-365">0</div>
-                                        <small class="text-muted">Annual view</small>
-                                    </div>
+                                <label class="btn btn-outline-primary" for="lastYear">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    <span class="period-label">1 Year</span>
+                                    <small class="period-count" id="count-365">0</small>
                                 </label>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <div class="time-period-card" data-period="0">
+
                                 <input type="radio" class="btn-check" name="timePeriod" id="allTime" value="0" checked>
-                                <label class="card h-100" for="allTime">
-                                    <div class="card-body text-center">
-                                        <i class="fas fa-infinity fa-2x mb-2 text-success"></i>
-                                        <h6 class="card-title mb-1">All Time</h6>
-                                        <div class="period-count" id="count-0">0</div>
-                                        <small class="text-muted">Complete history</small>
-                                    </div>
+                                <label class="btn btn-outline-primary" for="allTime">
+                                    <i class="fas fa-infinity me-2"></i>
+                                    <span class="period-label">All Time</span>
+                                    <small class="period-count" id="count-0">0</small>
                                 </label>
                             </div>
                         </div>
@@ -2114,11 +2110,11 @@
             updateTimePeriodLabelsWithCounts(reviews);
         }
 
-        // Calculate 3-month rating averages with comparison to previous 3 months
+        // Calculate 3-month rating averages with comparison to previous 3 months (STATIC - always current vs previous)
         function updateThreeMonthRatingMetrics(reviews) {
-            console.log('Calculating 3-month rating metrics...');
+            console.log('Calculating STATIC 3-month rating metrics (always current vs previous)...');
             
-            // Define 3-month periods
+            // Always calculate current 3 months vs previous 3 months regardless of selected time period
             const now = new Date();
             const threeMonthsAgo = new Date();
             threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -2126,20 +2122,20 @@
             const sixMonthsAgo = new Date();
             sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
             
-            // Filter reviews for current 3 months
+            // Filter reviews for current 3 months (e.g., Aug-Oct)
             const currentPeriodReviews = reviews.filter(review => {
                 const reviewDate = new Date(review.date);
                 return reviewDate >= threeMonthsAgo;
             });
             
-            // Filter reviews for previous 3 months
+            // Filter reviews for previous 3 months (e.g., May-July)
             const previousPeriodReviews = reviews.filter(review => {
                 const reviewDate = new Date(review.date);
                 return reviewDate >= sixMonthsAgo && reviewDate < threeMonthsAgo;
             });
             
-            console.log(`Current 3 months: ${currentPeriodReviews.length} reviews`);
-            console.log(`Previous 3 months: ${previousPeriodReviews.length} reviews`);
+            console.log(`Current 3 months (${threeMonthsAgo.toLocaleDateString()} - ${now.toLocaleDateString()}): ${currentPeriodReviews.length} reviews`);
+            console.log(`Previous 3 months (${sixMonthsAgo.toLocaleDateString()} - ${threeMonthsAgo.toLocaleDateString()}): ${previousPeriodReviews.length} reviews`);
             
             // Calculate current period averages
             const currentTotalAvg = calculateAverageRating(currentPeriodReviews);
