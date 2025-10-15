@@ -924,6 +924,26 @@
                     </div>
                 </div>
 
+                <!-- Sorting Controls -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <label for="sortBy" class="form-label me-2 mb-0">Sort by:</label>
+                                <select id="sortBy" class="form-select" style="width: auto;" onchange="sortFeedbackList()">
+                                    <option value="date-desc">Date (Newest First)</option>
+                                    <option value="date-asc">Date (Oldest First)</option>
+                                    <option value="rating-desc">Rating (Highest First)</option>
+                                    <option value="rating-asc">Rating (Lowest First)</option>
+                                </select>
+                            </div>
+                            <div class="text-muted">
+                                <i class="fas fa-sort me-1"></i>Sort feedback list
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Reviews Table -->
                 <div class="data-table">
                     <div class="table-responsive">
@@ -3421,7 +3441,7 @@
                 return;
             }
 
-            reviewsToShow.slice(0, 50).forEach(review => {
+            reviewsToShow.forEach(review => {
                 const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
@@ -3507,7 +3527,7 @@
             const tbody = document.getElementById('reviewsTableBody');
             tbody.innerHTML = '';
 
-            reviews.slice(0, 50).forEach(review => {
+            reviews.forEach(review => {
                 const userType = review.userType || analyzeUserType(review.content, review.author);
                 const extractedRating = extractRating(review.content) || review.rating;
                 const keywords = extractKeywords(review.content);
@@ -3530,6 +3550,44 @@
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        function sortFeedbackList() {
+            const sortBy = document.getElementById('sortBy').value;
+            let sortedReviews = [...currentFilteredReviews];
+            
+            switch (sortBy) {
+                case 'date-desc':
+                    sortedReviews.sort((a, b) => {
+                        const dateA = new Date(a.date || 0);
+                        const dateB = new Date(b.date || 0);
+                        return dateB - dateA; // Newest first
+                    });
+                    break;
+                case 'date-asc':
+                    sortedReviews.sort((a, b) => {
+                        const dateA = new Date(a.date || 0);
+                        const dateB = new Date(b.date || 0);
+                        return dateA - dateB; // Oldest first
+                    });
+                    break;
+                case 'rating-desc':
+                    sortedReviews.sort((a, b) => {
+                        const ratingA = extractRating(a.content) || a.rating || 0;
+                        const ratingB = extractRating(b.content) || b.rating || 0;
+                        return ratingB - ratingA; // Highest first
+                    });
+                    break;
+                case 'rating-asc':
+                    sortedReviews.sort((a, b) => {
+                        const ratingA = extractRating(a.content) || a.rating || 0;
+                        const ratingB = extractRating(b.content) || b.rating || 0;
+                        return ratingA - ratingB; // Lowest first
+                    });
+                    break;
+            }
+            
+            updateFilteredTable(sortedReviews);
         }
 
         function clearFilters() {
