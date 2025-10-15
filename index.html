@@ -2218,6 +2218,9 @@
         function generateDetailedRatingChart(reviews, ratingType, stepSize) {
             const container = document.getElementById('detailedRatingChart');
             
+            console.log(`Generating chart for ${reviews.length} reviews, stepSize: ${stepSize}`);
+            console.log('Sample review:', reviews[0]);
+            
             if (reviews.length === 0) {
                 container.innerHTML = `
                     <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
@@ -2291,15 +2294,33 @@
             console.log('Total traces created:', traces.length);
             console.log('Traces:', traces);
             
+            // If no traces, create a simple test chart to verify Plotly is working
             if (traces.length === 0) {
-                container.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-center h-100" style="color: var(--medium-gray);">
-                        <div class="text-center">
-                            <i class="fas fa-chart-line fa-3x mb-3"></i>
-                            <p>No rating data available for the selected time period</p>
-                        </div>
-                    </div>
-                `;
+                console.log('No traces found, creating test chart...');
+                const testTrace = {
+                    x: ['2024-01-01', '2024-01-02', '2024-01-03'],
+                    y: [3.5, 4.0, 3.8],
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: 'Test Data',
+                    line: { color: '#ffc107', width: 3 },
+                    marker: { size: 6, color: '#ffc107' }
+                };
+                
+                const testLayout = {
+                    title: { text: 'Test Chart - No Data Available', font: { size: 16, color: '#24292f' } },
+                    xaxis: { title: 'Time Period' },
+                    yaxis: { title: 'Average Rating', range: [0, 5] },
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: '#24292f', size: 12 }
+                };
+                
+                Plotly.newPlot(container, [testTrace], testLayout, {responsive: true}).then(() => {
+                    console.log('Test chart created successfully');
+                }).catch(error => {
+                    console.error('Error creating test chart:', error);
+                });
                 return;
             }
             
@@ -2367,27 +2388,36 @@
             
             // Calculate average ratings for each group
             const dates = Object.keys(groups).sort();
-            const overallRatings = dates.map(date => {
-                const groupReviews = groups[date];
-                const ratings = groupReviews.map(r => {
-                    const rating = extractRating(r.content) || r.rating;
-                    return rating && rating >= 1 && rating <= 5 ? rating : null;
-                }).filter(r => r !== null);
-                
-                return ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-            }).filter(r => r !== null);
+            const validDates = [];
+            const overallRatings = [];
             
-            // Filter out dates that have no valid ratings
-            const validDates = dates.filter((date, index) => {
+            dates.forEach(date => {
                 const groupReviews = groups[date];
-                const ratings = groupReviews.map(r => {
-                    const rating = extractRating(r.content) || r.rating;
-                    return rating && rating >= 1 && rating <= 5 ? rating : null;
-                }).filter(r => r !== null);
-                return ratings.length > 0;
+                const ratings = [];
+                
+                groupReviews.forEach(review => {
+                    // First try to use the review.rating field if it exists and is valid
+                    if (review.rating && review.rating >= 1 && review.rating <= 5) {
+                        ratings.push(review.rating);
+                    } else {
+                        // Fall back to extracting from content
+                        const extractedRating = extractRating(review.content);
+                        if (extractedRating && extractedRating >= 1 && extractedRating <= 5) {
+                            ratings.push(extractedRating);
+                        }
+                    }
+                });
+                
+                if (ratings.length > 0) {
+                    const averageRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+                    validDates.push(date);
+                    overallRatings.push(averageRating);
+                }
             });
             
-            console.log(`Grouped ${reviews.length} reviews into ${validDates.length} time periods with ratings:`, overallRatings);
+            console.log(`Grouped ${reviews.length} reviews into ${validDates.length} time periods`);
+            console.log('Sample ratings:', overallRatings.slice(0, 5));
+            console.log('Sample dates:', validDates.slice(0, 5));
             
             return { dates: validDates, overallRatings };
         }
